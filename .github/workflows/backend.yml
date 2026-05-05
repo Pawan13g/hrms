@@ -1,0 +1,57 @@
+name: backend
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: hrms
+          POSTGRES_PASSWORD: hrms
+          POSTGRES_DB: hrms
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U hrms -d hrms"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+          cache-dependency-path: backend/go.sum
+
+      - name: go vet
+        run: go vet ./...
+
+      - name: go build
+        run: go build ./...
+
+      - name: go test
+        env:
+          DATABASE_URL: postgres://hrms:hrms@localhost:5432/hrms?sslmode=disable
+          REDIS_URL: redis://localhost:6379/0
+          JWT_SECRET: ci-test-secret-32-bytes-please-1234
+        run: go test ./...

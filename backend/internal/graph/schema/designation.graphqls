@@ -1,0 +1,37 @@
+"""
+Job titles within a tenant, optionally bucketed under a department and a
+seniority level (free-form integer; the meaning is per-tenant).
+"""
+type Designation {
+  id: ID!
+  title: String!
+  level: Int
+  departmentId: ID
+  status: String!
+  createdAt: Int!
+  updatedAt: Int!
+}
+
+input CreateDesignationInput {
+  title: String!
+  level: Int
+  departmentId: ID
+}
+
+input UpdateDesignationInput {
+  title: String
+  level: Int
+  departmentId: ID
+  status: String
+}
+
+extend type Query {
+  designations: [Designation!]! @auth
+  designation(id: ID!): Designation @auth
+}
+
+extend type Mutation {
+  createDesignation(input: CreateDesignationInput!): Designation! @hasPermission(key: "org.write")
+  updateDesignation(id: ID!, input: UpdateDesignationInput!): Designation! @hasPermission(key: "org.write")
+  deleteDesignation(id: ID!): Boolean! @hasPermission(key: "org.write")
+}

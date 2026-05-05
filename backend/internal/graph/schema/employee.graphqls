@@ -1,0 +1,116 @@
+"""
+Employee record. Dates (`dateOfBirth`, `joiningDate`) are ISO yyyy-mm-dd
+strings; timestamps (`createdAt`, `updatedAt`) are unix seconds. The four
+FK ids resolve via the corresponding Department/Designation/Location/
+Employee types — fetched per-row today, dataloader batching tracked under
+plan §7.
+"""
+type Employee {
+  id: ID!
+  employeeCode: String!
+  firstName: String
+  lastName: String
+  email: String
+  phone: String
+  dateOfBirth: String
+  gender: String
+  joiningDate: String!
+  employmentType: String
+  departmentId: ID
+  designationId: ID
+  locationId: ID
+  managerId: ID
+  status: String!
+  createdAt: Int!
+  updatedAt: Int!
+}
+
+"""
+Relay-style PageInfo. `hasPreviousPage` is true whenever the request
+included an `after` cursor — we don't yet support backward pagination, so
+this is a coarse approximation, sufficient for "show prev" buttons.
+"""
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}
+
+type EmployeeEdge {
+  cursor: String!
+  node: Employee!
+}
+
+type EmployeeConnection {
+  edges: [EmployeeEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+input EmployeeFilter {
+  search: String
+  status: String
+  departmentId: ID
+  designationId: ID
+  locationId: ID
+  managerId: ID
+}
+
+enum EmployeeSort {
+  CREATED_DESC
+  CREATED_ASC
+  NAME_ASC
+  NAME_DESC
+  JOINING_DESC
+  JOINING_ASC
+}
+
+input CreateEmployeeInput {
+  employeeCode: String!
+  firstName: String
+  lastName: String
+  email: String
+  phone: String
+  dateOfBirth: String
+  gender: String
+  joiningDate: String!
+  employmentType: String
+  departmentId: ID
+  designationId: ID
+  locationId: ID
+  managerId: ID
+}
+
+input UpdateEmployeeInput {
+  employeeCode: String
+  firstName: String
+  lastName: String
+  email: String
+  phone: String
+  dateOfBirth: String
+  gender: String
+  joiningDate: String
+  employmentType: String
+  departmentId: ID
+  designationId: ID
+  locationId: ID
+  managerId: ID
+  status: String
+}
+
+extend type Query {
+  employees(
+    first: Int
+    after: String
+    filter: EmployeeFilter
+    sort: EmployeeSort
+  ): EmployeeConnection! @auth
+  employee(id: ID!): Employee @auth
+}
+
+extend type Mutation {
+  createEmployee(input: CreateEmployeeInput!): Employee! @hasPermission(key: "employee.write")
+  updateEmployee(id: ID!, input: UpdateEmployeeInput!): Employee! @hasPermission(key: "employee.write")
+  deleteEmployee(id: ID!): Boolean! @hasPermission(key: "employee.delete")
+}

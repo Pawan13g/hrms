@@ -1,0 +1,53 @@
+"""
+A physical office or hub. The `timezone` is an IANA tz name (e.g.
+"Asia/Kolkata"); timestamps elsewhere remain UTC and are converted to this
+timezone on the client at render time only.
+"""
+type Location {
+  id: ID!
+  name: String!
+  addressLine1: String
+  addressLine2: String
+  countryId: ID
+  stateId: ID
+  cityId: ID
+  pincode: String
+  timezone: String
+  status: String!
+  createdAt: Int!
+  updatedAt: Int!
+}
+
+input CreateLocationInput {
+  name: String!
+  addressLine1: String
+  addressLine2: String
+  countryId: ID
+  stateId: ID
+  cityId: ID
+  pincode: String
+  timezone: String
+}
+
+input UpdateLocationInput {
+  name: String
+  addressLine1: String
+  addressLine2: String
+  countryId: ID
+  stateId: ID
+  cityId: ID
+  pincode: String
+  timezone: String
+  status: String
+}
+
+extend type Query {
+  locations: [Location!]! @auth
+  location(id: ID!): Location @auth
+}
+
+extend type Mutation {
+  createLocation(input: CreateLocationInput!): Location! @hasPermission(key: "org.write")
+  updateLocation(id: ID!, input: UpdateLocationInput!): Location! @hasPermission(key: "org.write")
+  deleteLocation(id: ID!): Boolean! @hasPermission(key: "org.write")
+}

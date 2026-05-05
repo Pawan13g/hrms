@@ -1,0 +1,2 @@
+ALTER TABLE tenants DROP CONSTRAINT IF EXISTS fk_tenants_city;
+DROP TABLE IF EXISTS cities;

@@ -1,0 +1,37 @@
+"""
+Department in the org tree. `parentId` may be null for root nodes; the
+service rejects parent assignments that would close a cycle.
+"""
+type Department {
+  id: ID!
+  name: String!
+  code: String
+  parentId: ID
+  status: String!
+  createdAt: Int!
+  updatedAt: Int!
+}
+
+input CreateDepartmentInput {
+  name: String!
+  code: String
+  parentId: ID
+}
+
+input UpdateDepartmentInput {
+  name: String
+  code: String
+  parentId: ID
+  status: String
+}
+
+extend type Query {
+  departments: [Department!]! @auth
+  department(id: ID!): Department @auth
+}
+
+extend type Mutation {
+  createDepartment(input: CreateDepartmentInput!): Department! @hasPermission(key: "org.write")
+  updateDepartment(id: ID!, input: UpdateDepartmentInput!): Department! @hasPermission(key: "org.write")
+  deleteDepartment(id: ID!): Boolean! @hasPermission(key: "org.write")
+}

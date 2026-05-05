@@ -1,0 +1,28 @@
+"""
+Read-only geography catalog. Used to drive country → state → city dropdowns
+on location and employee forms. Rows are tenant-agnostic seed data; mutations
+are migration-only.
+"""
+type Country {
+  id: ID!
+  name: String!
+  isoCode: String
+}
+
+type State {
+  id: ID!
+  countryId: ID
+  name: String!
+}
+
+type City {
+  id: ID!
+  stateId: ID
+  name: String!
+}
+
+extend type Query {
+  countries: [Country!]! @auth
+  states(countryId: ID!): [State!]! @auth
+  cities(stateId: ID!): [City!]! @auth
+}

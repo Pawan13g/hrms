@@ -1,0 +1,25 @@
+"""
+Viewer is the authenticated caller projected from the JWT principal.
+This is the M1 smoke-test surface — proves auth + tenant + RBAC plumbing
+are wired end-to-end before the per-domain schemas land.
+"""
+type Viewer {
+  userId: ID!
+  tenantId: ID!
+  permissions: [String!]!
+}
+
+type Query {
+  """
+  Returns the current authenticated principal, or null if unauthenticated.
+  """
+  viewer: Viewer @auth
+}
+
+"""
+Root Mutation type. Per-domain mutation fields land here via `extend type
+Mutation` in their own schema files.
+"""
+type Mutation {
+  _empty: Boolean
+}
