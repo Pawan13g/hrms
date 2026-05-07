@@ -27,6 +27,7 @@ var All = []Permission{
 	{Key: "org.write", Description: "Create or update org structure (departments, designations, locations)"},
 	{Key: "customfield.write", Description: "Manage custom forms, fields, options"},
 	{Key: "audit.read", Description: "View audit log entries"},
+	{Key: "rbac.manage", Description: "Manage roles, permissions, and user-role assignments"},
 }
 
 // Keys returns just the permission key strings.

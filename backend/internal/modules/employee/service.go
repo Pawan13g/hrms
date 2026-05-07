@@ -53,6 +53,19 @@ func (s *Service) Create(ctx context.Context, tenantID int64, in CreateInput) (*
 	if err != nil {
 		return nil, err
 	}
+	// Auto-create user + link: every employee with an email gets a user
+	// account so roles and login access work from day one. If a user with
+	// the same email already exists (e.g. the founding admin), just link.
+	if in.Email != nil && *in.Email != "" {
+		uid, _ := s.Repo.FindUserByEmail(ctx, tenantID, *in.Email)
+		if uid == 0 {
+			uid, _ = s.Repo.CreateUser(ctx, tenantID, *in.Email)
+		}
+		if uid != 0 {
+			_ = s.Repo.SetUserID(ctx, tenantID, e.ID, uid)
+			e, _ = s.Repo.Get(ctx, tenantID, e.ID)
+		}
+	}
 	if err := s.Audit.Record(ctx, entityType, e.ID, audit.ActionCreate, nil, e); err != nil {
 		// Audit failure is non-fatal on create — the row exists. Surface as
 		// a warning via context cancellation tolerance: in dev we log; in

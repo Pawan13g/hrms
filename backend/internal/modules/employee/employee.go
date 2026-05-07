@@ -22,6 +22,7 @@ type Employee struct {
 	DesignationID  *int64
 	LocationID     *int64
 	ManagerID      *int64
+	UserID         *int64
 	Status         string
 	CreatedAt      time.Time
 	UpdatedAt      time.Time

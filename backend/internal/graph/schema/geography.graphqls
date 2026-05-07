@@ -22,7 +22,7 @@ type City {
 }
 
 extend type Query {
-  countries: [Country!]! @auth
-  states(countryId: ID!): [State!]! @auth
-  cities(stateId: ID!): [City!]! @auth
+  countries: [Country!]!
+  states(countryId: ID!): [State!]!
+  cities(stateId: ID!): [City!]!
 }

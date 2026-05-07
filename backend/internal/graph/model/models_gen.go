@@ -62,6 +62,12 @@ type CreateLocationInput struct {
 	Timezone     *string `json:"timezone,omitempty"`
 }
 
+type CreateRoleInput struct {
+	Name          string   `json:"name"`
+	Description   *string  `json:"description,omitempty"`
+	PermissionIds []string `json:"permissionIds"`
+}
+
 // Department in the org tree. `parentId` may be null for root nodes; the
 // service rejects parent assignments that would close a cycle.
 type Department struct {
@@ -106,6 +112,7 @@ type Employee struct {
 	DesignationID  *string `json:"designationId,omitempty"`
 	LocationID     *string `json:"locationId,omitempty"`
 	ManagerID      *string `json:"managerId,omitempty"`
+	UserID         *string `json:"userId,omitempty"`
 	Status         string  `json:"status"`
 	CreatedAt      int     `json:"createdAt"`
 	UpdatedAt      int     `json:"updatedAt"`
@@ -167,6 +174,35 @@ type PageInfo struct {
 type Query struct {
 }
 
+// Role is a tenant-scoped set of permissions assignable to users.
+// System roles (is_system=true) are auto-created at registration and cannot be
+// deleted or renamed.
+type Role struct {
+	ID          string            `json:"id"`
+	Name        string            `json:"name"`
+	Description *string           `json:"description,omitempty"`
+	IsSystem    bool              `json:"isSystem"`
+	Status      string            `json:"status"`
+	Permissions []*RolePermission `json:"permissions"`
+	UserCount   int               `json:"userCount"`
+	CreatedAt   int               `json:"createdAt"`
+}
+
+// RolePermission is a permission key with its database id, used for the
+// permission checklist when editing a role.
+type RolePermission struct {
+	ID          string  `json:"id"`
+	Key         string  `json:"key"`
+	Description *string `json:"description,omitempty"`
+}
+
+// RoleUser is a user assigned to a role — minimal surface for the "Assigned
+// Users" list on the role detail page.
+type RoleUser struct {
+	UserID string `json:"userId"`
+	Email  string `json:"email"`
+}
+
 type State struct {
 	ID        string  `json:"id"`
 	CountryID *string `json:"countryId,omitempty"`
@@ -214,6 +250,20 @@ type UpdateLocationInput struct {
 	Pincode      *string `json:"pincode,omitempty"`
 	Timezone     *string `json:"timezone,omitempty"`
 	Status       *string `json:"status,omitempty"`
+}
+
+type UpdateRoleInput struct {
+	Name        *string `json:"name,omitempty"`
+	Description *string `json:"description,omitempty"`
+	Status      *string `json:"status,omitempty"`
+}
+
+// UserRole is a mapping of a user to a role, returned when querying which roles
+// a specific user holds.
+type UserRole struct {
+	UserID   string `json:"userId"`
+	RoleID   string `json:"roleId"`
+	RoleName string `json:"roleName"`
 }
 
 // Viewer is the authenticated caller projected from the JWT principal.

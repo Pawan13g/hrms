@@ -20,12 +20,12 @@ export default function OrgLayout({
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Org structure</h1>
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-muted-foreground">
           Manage departments, designations, and physical locations.
         </p>
       </div>
 
-      <nav className="flex gap-1 border-b border-slate-200">
+      <nav className="flex gap-1 border-b border-border">
         {tabs.map((tab) => {
           const active = pathname.startsWith(tab.href)
           return (
@@ -35,8 +35,8 @@ export default function OrgLayout({
               className={cn(
                 "border-b-2 px-3 pb-3 pt-1 text-sm font-medium transition-colors",
                 active
-                  ? "border-violet-600 text-violet-700"
-                  : "border-transparent text-slate-600 hover:text-slate-900",
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground",
               )}
             >
               {tab.label}

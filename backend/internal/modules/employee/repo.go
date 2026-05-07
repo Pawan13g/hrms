@@ -17,7 +17,7 @@ func NewRepo(p *pgxpool.Pool) *Repo { return &Repo{Pool: p} }
 
 const selectCols = `id, tenant_id, employee_code, first_name, last_name, email, phone,
     date_of_birth, gender, joining_date, employment_type,
-    department_id, designation_id, location_id, manager_id,
+    department_id, designation_id, location_id, manager_id, user_id,
     status, created_at, updated_at`
 
 func scan(row pgx.Row, e *Employee) error {
@@ -25,7 +25,7 @@ func scan(row pgx.Row, e *Employee) error {
 		&e.ID, &e.TenantID, &e.EmployeeCode,
 		&e.FirstName, &e.LastName, &e.Email, &e.Phone,
 		&e.DateOfBirth, &e.Gender, &e.JoiningDate, &e.EmploymentType,
-		&e.DepartmentID, &e.DesignationID, &e.LocationID, &e.ManagerID,
+		&e.DepartmentID, &e.DesignationID, &e.LocationID, &e.ManagerID, &e.UserID,
 		&e.Status, &e.CreatedAt, &e.UpdatedAt,
 	)
 }
@@ -134,6 +134,49 @@ func (r *Repo) SoftDelete(ctx context.Context, tenantID, id int64) error {
         UPDATE employees SET status = 'deleted'
         WHERE tenant_id = $1 AND id = $2
     `, tenantID, id)
+	return err
+}
+
+// FindUserByEmail looks up a user row by email within the same tenant.
+// Returns 0 if not found.
+func (r *Repo) FindUserByEmail(ctx context.Context, tenantID int64, email string) (int64, error) {
+	var uid int64
+	err := r.Pool.QueryRow(ctx, `
+        SELECT id FROM users
+        WHERE tenant_id = $1 AND email = $2 AND status = 'active'
+    `, tenantID, email).Scan(&uid)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return 0, nil
+		}
+		return 0, err
+	}
+	return uid, nil
+}
+
+// CreateUser inserts a new user row with a random temporary password hash.
+// The user can reset their password via a future "invite" or "set password" flow.
+// Returns the new user ID.
+func (r *Repo) CreateUser(ctx context.Context, tenantID int64, email string) (int64, error) {
+	var uid int64
+	// Use a bcrypt hash of a random placeholder — the user cannot log in with
+	// this; they will need a password-reset / invite flow. The placeholder
+	// ensures the password_hash NOT NULL constraint is satisfied.
+	placeholder := "$2a$10$placeholder.not.a.real.hash.000000000000000000000000"
+	err := r.Pool.QueryRow(ctx, `
+        INSERT INTO users (tenant_id, email, password_hash)
+        VALUES ($1, $2, $3)
+        RETURNING id
+    `, tenantID, email, placeholder).Scan(&uid)
+	return uid, err
+}
+
+// SetUserID links the employee to a user account.
+func (r *Repo) SetUserID(ctx context.Context, tenantID, employeeID, userID int64) error {
+	_, err := r.Pool.Exec(ctx, `
+        UPDATE employees SET user_id = $3
+        WHERE tenant_id = $1 AND id = $2
+    `, tenantID, employeeID, userID)
 	return err
 }
 

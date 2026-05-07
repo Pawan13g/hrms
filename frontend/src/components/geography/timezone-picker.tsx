@@ -1,11 +1,14 @@
 "use client"
 
 import { useMemo } from "react"
-import { Select } from "@/components/ui/select"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
-// Pulls the IANA tz list from the runtime when available, falling back to
-// a curated set on older engines. Backend validates with `time.LoadLocation`
-// so the contract is "any valid IANA tz".
 const FALLBACK = [
   "UTC",
   "Asia/Kolkata",
@@ -22,11 +25,9 @@ const FALLBACK = [
 export function TimezonePicker({
   value,
   onChange,
-  id,
 }: {
   value: string | null | undefined
   onChange: (v: string | null) => void
-  id?: string
 }) {
   const zones = useMemo<string[]>(() => {
     const intl = (
@@ -46,16 +47,20 @@ export function TimezonePicker({
 
   return (
     <Select
-      id={id}
-      value={value ?? ""}
-      onChange={(e) => onChange(e.target.value || null)}
+      value={value ?? undefined}
+      onValueChange={(v) => onChange(v === "__none__" ? null : v)}
     >
-      <option value="">Select timezone</option>
-      {zones.map((z) => (
-        <option key={z} value={z}>
-          {z}
-        </option>
-      ))}
+      <SelectTrigger className="h-10">
+        <SelectValue placeholder="Select timezone" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="__none__">No timezone</SelectItem>
+        {zones.map((z) => (
+          <SelectItem key={z} value={z}>
+            {z}
+          </SelectItem>
+        ))}
+      </SelectContent>
     </Select>
   )
 }

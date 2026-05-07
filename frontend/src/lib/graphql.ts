@@ -1,4 +1,5 @@
 import { ClientError, GraphQLClient } from "graphql-request"
+import { toast } from "sonner"
 import { refreshTokens, tokens } from "./auth-tokens"
 
 const endpoint =
@@ -28,12 +29,27 @@ export async function gqlRequest<T = unknown, V = Record<string, unknown>>(
       if (!refreshed) throw err
       return await clientWithAuth().request<T>(document, variables ?? undefined)
     }
+    if (isForbidden(err)) {
+      toast.error("Insufficient permissions", {
+        description: "You don't have access to perform this action.",
+      })
+    }
     throw err
   }
 }
 
 function isUnauthorized(err: unknown): boolean {
   return err instanceof ClientError && err.response.status === 401
+}
+
+function isForbidden(err: unknown): boolean {
+  if (!(err instanceof ClientError)) return false
+  const errors = err.response?.errors
+  if (!Array.isArray(errors)) return false
+  return errors.some(
+    (e: { message?: string }) =>
+      typeof e.message === "string" && e.message.includes("rbac: forbidden"),
+  )
 }
 
 // gqlClient is kept for code that pre-dates gqlRequest; new callers should

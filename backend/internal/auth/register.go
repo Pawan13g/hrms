@@ -29,8 +29,12 @@ const maxSlugAttempts = 99
 
 type registerRequest struct {
 	TenantName string `json:"tenantName" binding:"required,min=2,max=255"`
+	FirstName  string `json:"firstName"  binding:"required,min=1,max=255"`
+	LastName   string `json:"lastName"   binding:"required,min=1,max=255"`
 	Email      string `json:"email"      binding:"required,email"`
 	Password   string `json:"password"   binding:"required,min=8"`
+	CountryID  *int64 `json:"countryId"`
+	CityID     *int64 `json:"cityId"`
 }
 
 type registerResponse struct {
@@ -66,7 +70,7 @@ func RegisterHandler(d LoginDeps) gin.HandlerFunc {
 			return
 		}
 		ctx := c.Request.Context()
-		tenantID, userID, code, err := createTenantAndUser(ctx, d.PG, req.TenantName, base, req.Email, string(hash))
+		tenantID, userID, code, err := createTenantAndUser(ctx, d.PG, req.TenantName, base, req.Email, string(hash), req.FirstName, req.LastName, req.CountryID, req.CityID)
 		if err != nil {
 			var pgErr *pgconn.PgError
 			if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
@@ -104,14 +108,14 @@ func slugify(in string) string {
 // createTenantAndUser opens a tx, inserts the tenant (retrying suffix on slug
 // collision), then inserts the user. Returns the chosen tenant code so the
 // caller can echo it back in the response.
-func createTenantAndUser(ctx context.Context, pool *pgxpool.Pool, tenantName, baseCode, email, passwordHash string) (int64, int64, string, error) {
+func createTenantAndUser(ctx context.Context, pool *pgxpool.Pool, tenantName, baseCode, email, passwordHash, firstName, lastName string, countryID, cityID *int64) (int64, int64, string, error) {
 	tx, err := pool.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
 		return 0, 0, "", err
 	}
 	defer tx.Rollback(ctx)
 
-	tenantID, code, err := insertTenantWithUniqueCode(ctx, tx, tenantName, baseCode)
+	tenantID, code, err := insertTenantWithUniqueCode(ctx, tx, tenantName, baseCode, countryID, cityID)
 	if err != nil {
 		return 0, 0, "", err
 	}
@@ -122,6 +126,38 @@ func createTenantAndUser(ctx context.Context, pool *pgxpool.Pool, tenantName, ba
         VALUES ($1, $2, $3)
         RETURNING id
     `, tenantID, email, passwordHash).Scan(&userID); err != nil {
+		return 0, 0, "", err
+	}
+
+	// Create the system "Admin" role with all permissions for the founding user.
+	var roleID int64
+	if err := tx.QueryRow(ctx, `
+        INSERT INTO roles (tenant_id, name, description, is_system)
+        VALUES ($1, 'Admin', 'Full access — auto-created at registration', TRUE)
+        RETURNING id
+    `, tenantID).Scan(&roleID); err != nil {
+		return 0, 0, "", err
+	}
+
+	if _, err := tx.Exec(ctx, `
+        INSERT INTO role_permissions (role_id, permission_id)
+        SELECT $1, id FROM permissions
+    `, roleID); err != nil {
+		return 0, 0, "", err
+	}
+
+	if _, err := tx.Exec(ctx, `
+        INSERT INTO user_roles (user_id, role_id) VALUES ($1, $2)
+    `, userID, roleID); err != nil {
+		return 0, 0, "", err
+	}
+
+	// Create the founding employee record linked to the user so the employee
+	// directory is never empty and the profile Roles tab works from day one.
+	if _, err := tx.Exec(ctx, `
+        INSERT INTO employees (tenant_id, employee_code, first_name, last_name, email, joining_date, user_id)
+        VALUES ($1, 'EMP-001', $2, $3, $4, CURRENT_DATE, $5)
+    `, tenantID, firstName, lastName, email, userID); err != nil {
 		return 0, 0, "", err
 	}
 
@@ -138,7 +174,7 @@ func createTenantAndUser(ctx context.Context, pool *pgxpool.Pool, tenantName, ba
 //
 // Why a loop instead of a sequence: tenant codes are user-visible URL slugs,
 // so we want the prettiest free name, not a guaranteed-unique random string.
-func insertTenantWithUniqueCode(ctx context.Context, tx pgx.Tx, name, base string) (int64, string, error) {
+func insertTenantWithUniqueCode(ctx context.Context, tx pgx.Tx, name, base string, countryID, cityID *int64) (int64, string, error) {
 	for i := 1; i <= maxSlugAttempts; i++ {
 		code := base
 		if i > 1 {
@@ -150,10 +186,10 @@ func insertTenantWithUniqueCode(ctx context.Context, tx pgx.Tx, name, base strin
 		}
 		var id int64
 		insertErr := sp.QueryRow(ctx, `
-            INSERT INTO tenants (name, code)
-            VALUES ($1, $2)
+            INSERT INTO tenants (name, code, country_id, city_id)
+            VALUES ($1, $2, $3, $4)
             RETURNING id
-        `, name, code).Scan(&id)
+        `, name, code, countryID, cityID).Scan(&id)
 		if insertErr == nil {
 			if err := sp.Commit(ctx); err != nil {
 				return 0, "", err

@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { ChevronRight, Pencil, Plus, Trash2 } from "lucide-react"
+import { toast } from "sonner"
 import {
   Department,
   useCreateDepartment,
@@ -17,22 +18,35 @@ import {
   Dialog,
   DialogBody,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select } from "@/components/ui/select"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Badge } from "@/components/ui/badge"
+import { Card } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 
 // ---------------- Tree shaping ----------------
 
 type TreeNode = Department & { children: TreeNode[] }
 
-// buildTree groups departments by parent_id so the page can render the
-// hierarchy with WITH-RECURSIVE-style fan-out without a server round-trip
-// per node. Cycles are impossible (the backend service rejects them on
-// every parent change), so we don't guard against them here.
 function buildTree(items: Department[]): TreeNode[] {
   const byId = new Map<string, TreeNode>()
   items.forEach((d) => byId.set(d.id, { ...d, children: [] }))
@@ -47,10 +61,6 @@ function buildTree(items: Department[]): TreeNode[] {
   return roots
 }
 
-// descendantIds collects every id in the subtree rooted at a node — used
-// when building the parent-picker option list to exclude self+descendants
-// (the backend's IsDescendant guard mirrors this; we filter client-side
-// purely for UX so the user can't pick a doomed option).
 function descendantIds(node: TreeNode): string[] {
   const out = [node.id]
   for (const child of node.children) out.push(...descendantIds(child))
@@ -74,7 +84,8 @@ export default function DepartmentsPage() {
   const [creating, setCreating] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState<Department | null>(null)
   const del = useDeleteDepartment({
-    onSuccess: () => setConfirmDelete(null),
+    onSuccess: () => { toast.success("Department archived"); setConfirmDelete(null) },
+    onError: (err) => { toast.error("Archive failed", { description: (err as Error).message }) },
   })
 
   const tree = useMemo(() => buildTree(q.data ?? []), [q.data])
@@ -88,19 +99,19 @@ export default function DepartmentsPage() {
         </Button>
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
+      <Card>
         {q.isLoading ? (
-          <div className="p-6 text-sm text-slate-600">Loading…</div>
+          <div className="p-6 text-sm text-muted-foreground">Loading...</div>
         ) : q.error ? (
-          <div className="p-6 text-sm text-red-600">
+          <div className="p-6 text-sm text-destructive">
             {(q.error as Error).message}
           </div>
         ) : tree.length === 0 ? (
-          <div className="p-10 text-center text-sm text-slate-600">
+          <div className="p-10 text-center text-sm text-muted-foreground">
             No departments yet. Create the first one to start the org tree.
           </div>
         ) : (
-          <ul className="divide-y divide-slate-100">
+          <ul className="divide-y divide-border">
             {tree.map((node) => (
               <DeptRow
                 key={node.id}
@@ -112,7 +123,7 @@ export default function DepartmentsPage() {
             ))}
           </ul>
         )}
-      </div>
+      </Card>
 
       {creating && (
         <DepartmentForm
@@ -134,11 +145,19 @@ export default function DepartmentsPage() {
       {confirmDelete && (
         <Dialog open onOpenChange={() => setConfirmDelete(null)}>
           <DialogContent className="max-w-md">
-            <DialogHeader
-              title="Archive department?"
-              description={`"${confirmDelete.name}" will be marked as deleted and hidden from the org tree. This is a soft-delete — the row stays in the database for audit history.`}
-              onClose={() => setConfirmDelete(null)}
-            />
+            <DialogHeader>
+              <DialogTitle>Archive department?</DialogTitle>
+              <DialogDescription>
+                &ldquo;{confirmDelete.name}&rdquo; will be marked as deleted and
+                hidden from the org tree. This is a soft-delete — the row stays
+                in the database for audit history.
+              </DialogDescription>
+            </DialogHeader>
+            {del.error && (
+              <p className="px-6 text-sm text-destructive">
+                {(del.error as Error).message}
+              </p>
+            )}
             <DialogFooter>
               <Button
                 variant="secondary"
@@ -152,14 +171,9 @@ export default function DepartmentsPage() {
                 onClick={() => del.mutate(confirmDelete.id)}
                 disabled={del.isPending}
               >
-                {del.isPending ? "Archiving…" : "Archive"}
+                {del.isPending ? "Archiving..." : "Archive"}
               </Button>
             </DialogFooter>
-            {del.error && (
-              <p className="px-6 pb-4 text-sm text-red-600">
-                {(del.error as Error).message}
-              </p>
-            )}
           </DialogContent>
         </Dialog>
       )}
@@ -183,7 +197,7 @@ function DeptRow({
   return (
     <>
       <li
-        className="group flex items-center gap-2 px-4 py-3 hover:bg-slate-50"
+        className="group flex items-center gap-2 px-4 py-3 hover:bg-accent"
         style={{ paddingLeft: `${1 + depth * 1.5}rem` }}
       >
         <button
@@ -191,7 +205,7 @@ function DeptRow({
           aria-label={open ? "Collapse" : "Expand"}
           onClick={() => setOpen((v) => !v)}
           className={cn(
-            "flex h-6 w-6 items-center justify-center rounded text-slate-400 hover:bg-slate-100 hover:text-slate-700",
+            "flex h-6 w-6 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground",
             !hasChildren && "invisible",
           )}
         >
@@ -200,16 +214,12 @@ function DeptRow({
           />
         </button>
         <div className="flex flex-1 items-center gap-3">
-          <span className="text-sm font-medium text-slate-900">{node.name}</span>
+          <span className="text-sm font-medium text-foreground">{node.name}</span>
           {node.code && (
-            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">
-              {node.code}
-            </span>
+            <Badge variant="secondary">{node.code}</Badge>
           )}
           {node.status !== "active" && (
-            <span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
-              {node.status}
-            </span>
+            <Badge variant="warning">{node.status}</Badge>
           )}
         </div>
         <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
@@ -268,15 +278,17 @@ function DepartmentForm({
   allItems: Department[]
   onClose: () => void
 }) {
-  const create = useCreateDepartment({ onSuccess: onClose })
-  const update = useUpdateDepartment({ onSuccess: onClose })
+  const create = useCreateDepartment({
+    onSuccess: () => { toast.success(mode === "create" ? "Department created" : "Department updated"); onClose() },
+    onError: (err) => { toast.error("Failed", { description: err.message }) },
+  })
+  const update = useUpdateDepartment({
+    onSuccess: () => { toast.success("Department updated"); onClose() },
+    onError: (err) => { toast.error("Failed", { description: err.message }) },
+  })
   const submitting = create.isPending || update.isPending
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<FormValues>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: existing?.name ?? "",
@@ -285,8 +297,6 @@ function DepartmentForm({
     },
   })
 
-  // For edit mode, exclude self + descendants from the parent list to mirror
-  // the backend's cycle-safe IsDescendant check.
   const excluded = useMemo(() => {
     if (mode !== "edit" || !existing) return new Set<string>()
     const node = findNode(tree, existing.id)
@@ -310,66 +320,67 @@ function DepartmentForm({
     }
   }
 
-  const err = (create.error ?? update.error) as Error | null
-
   return (
     <Dialog open onOpenChange={onClose}>
       <DialogContent>
-        <DialogHeader
-          title={mode === "create" ? "New department" : "Edit department"}
-          description={
-            mode === "create"
+        <DialogHeader>
+          <DialogTitle>
+            {mode === "create" ? "New department" : "Edit department"}
+          </DialogTitle>
+          <DialogDescription>
+            {mode === "create"
               ? "Add a node to the org tree."
-              : `Editing "${existing?.name}".`
-          }
-          onClose={onClose}
-        />
-        <form onSubmit={handleSubmit(onSubmit)} noValidate>
-          <DialogBody>
-            <div className="space-y-4">
-              <div className="space-y-1">
-                <Label htmlFor="name">Name</Label>
-                <Input id="name" {...register("name")} />
-                {errors.name && (
-                  <p className="text-xs text-red-600">{errors.name.message}</p>
-                )}
+              : `Editing "${existing?.name}".`}
+          </DialogDescription>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
+            <DialogBody>
+              <div className="space-y-4">
+                <FormField control={form.control} name="name" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Name</FormLabel>
+                    <FormControl><Input {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="code" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Code (optional)</FormLabel>
+                    <FormControl><Input placeholder="ENG" {...field} /></FormControl>
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="parentId" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Parent (optional)</FormLabel>
+                    <Select
+                      value={field.value || undefined}
+                      onValueChange={(v) => field.onChange(v === "__none__" ? "" : v)}
+                    >
+                      <SelectTrigger className="h-10">
+                        <SelectValue placeholder="No parent (root)" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">No parent (root)</SelectItem>
+                        {parentOptions.map((d) => (
+                          <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )} />
               </div>
-              <div className="space-y-1">
-                <Label htmlFor="code">Code (optional)</Label>
-                <Input id="code" placeholder="ENG" {...register("code")} />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="parentId">Parent (optional)</Label>
-                <Select id="parentId" {...register("parentId")}>
-                  <option value="">No parent (root)</option>
-                  {parentOptions.map((d) => (
-                    <option key={d.id} value={d.id}>
-                      {d.name}
-                    </option>
-                  ))}
-                </Select>
-              </div>
-              {err && <p className="text-sm text-red-600">{err.message}</p>}
-            </div>
-          </DialogBody>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={onClose}
-              disabled={submitting}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting
-                ? "Saving…"
-                : mode === "create"
-                  ? "Create"
-                  : "Save changes"}
-            </Button>
-          </DialogFooter>
-        </form>
+            </DialogBody>
+            <DialogFooter>
+              <Button type="button" variant="secondary" onClick={onClose} disabled={submitting}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={submitting}>
+                {submitting ? "Saving..." : mode === "create" ? "Create" : "Save changes"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   )

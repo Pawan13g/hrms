@@ -13,6 +13,7 @@ import (
 	"github.com/sodium-labs/hrms/backend/internal/modules/employee"
 	"github.com/sodium-labs/hrms/backend/internal/modules/geography"
 	"github.com/sodium-labs/hrms/backend/internal/modules/location"
+	"github.com/sodium-labs/hrms/backend/internal/modules/role"
 )
 
 // errNoTenant is returned when a resolver runs without a Principal in ctx.
@@ -210,6 +211,58 @@ func gqlSortToService(s *model.EmployeeSort) employee.Sort {
 	}
 }
 
+// parseIDs converts a slice of GraphQL ID strings to int64s.
+func parseIDs(ss []string) ([]int64, error) {
+	out := make([]int64, 0, len(ss))
+	for _, s := range ss {
+		n, err := parseID(s)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, n)
+	}
+	return out, nil
+}
+
+// ---------- Role ----------
+
+func toGQLRole(r *role.Role) *model.Role {
+	if r == nil {
+		return nil
+	}
+	perms := make([]*model.RolePermission, len(r.Permissions))
+	for i := range r.Permissions {
+		perms[i] = toGQLPermission(&r.Permissions[i])
+	}
+	return &model.Role{
+		ID:          idStr(r.ID),
+		Name:        r.Name,
+		Description: r.Description,
+		IsSystem:    r.IsSystem,
+		Status:      r.Status,
+		Permissions: perms,
+		UserCount:   r.UserCount,
+		CreatedAt:   unixSecs(r.CreatedAt),
+	}
+}
+
+func toGQLPermission(p *role.Permission) *model.RolePermission {
+	if p == nil {
+		return nil
+	}
+	var desc *string
+	if p.Description != nil {
+		desc = p.Description
+	}
+	return &model.RolePermission{
+		ID:          idStr(p.ID),
+		Key:         p.Key,
+		Description: desc,
+	}
+}
+
+// ---------- Employee ----------
+
 func toGQLEmployee(e *employee.Employee) *model.Employee {
 	if e == nil {
 		return nil
@@ -229,6 +282,7 @@ func toGQLEmployee(e *employee.Employee) *model.Employee {
 		DesignationID: pIDStr(e.DesignationID),
 		LocationID:    pIDStr(e.LocationID),
 		ManagerID:     pIDStr(e.ManagerID),
+		UserID:        pIDStr(e.UserID),
 		Status:        e.Status,
 		CreatedAt:     unixSecs(e.CreatedAt),
 		UpdatedAt:     unixSecs(e.UpdatedAt),

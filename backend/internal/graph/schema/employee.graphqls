@@ -20,6 +20,7 @@ type Employee {
   designationId: ID
   locationId: ID
   managerId: ID
+  userId: ID
   status: String!
   createdAt: Int!
   updatedAt: Int!

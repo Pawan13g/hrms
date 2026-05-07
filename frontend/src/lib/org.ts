@@ -110,7 +110,7 @@ type UpdateDeptInput = {
 }
 
 export function useCreateDepartment(
-  opts?: UseMutationOptions<unknown, Error, CreateDeptInput>,
+  opts?: UseMutationOptions<unknown, Error, CreateDeptInput, unknown>,
 ) {
   const qc = useQueryClient()
   return useMutation({
@@ -125,7 +125,7 @@ export function useCreateDepartment(
 }
 
 export function useUpdateDepartment(
-  opts?: UseMutationOptions<unknown, Error, { id: string; input: UpdateDeptInput }>,
+  opts?: UseMutationOptions<unknown, Error, { id: string; input: UpdateDeptInput }, unknown>,
 ) {
   const qc = useQueryClient()
   return useMutation({
@@ -139,7 +139,7 @@ export function useUpdateDepartment(
 }
 
 export function useDeleteDepartment(
-  opts?: UseMutationOptions<unknown, Error, string>,
+  opts?: UseMutationOptions<unknown, Error, string, unknown>,
 ) {
   const qc = useQueryClient()
   return useMutation({
@@ -213,7 +213,7 @@ type UpdateDesigInput = {
 }
 
 export function useCreateDesignation(
-  opts?: UseMutationOptions<unknown, Error, CreateDesigInput>,
+  opts?: UseMutationOptions<unknown, Error, CreateDesigInput, unknown>,
 ) {
   const qc = useQueryClient()
   return useMutation({
@@ -231,7 +231,8 @@ export function useUpdateDesignation(
   opts?: UseMutationOptions<
     unknown,
     Error,
-    { id: string; input: UpdateDesigInput }
+    { id: string; input: UpdateDesigInput },
+    unknown
   >,
 ) {
   const qc = useQueryClient()
@@ -246,7 +247,7 @@ export function useUpdateDesignation(
 }
 
 export function useDeleteDesignation(
-  opts?: UseMutationOptions<unknown, Error, string>,
+  opts?: UseMutationOptions<unknown, Error, string, unknown>,
 ) {
   const qc = useQueryClient()
   return useMutation({
@@ -325,16 +326,16 @@ export type CreateLocInput = {
 export type UpdateLocInput = Partial<CreateLocInput> & { status?: string }
 
 export function useCreateLocation(
-  opts?: UseMutationOptions<unknown, Error, CreateLocInput>,
+  opts?: UseMutationOptions<unknown, Error, CreateLocInput, unknown>,
 ) {
   const qc = useQueryClient()
   return useMutation({
     ...opts,
     mutationFn: (input: CreateLocInput) =>
       gqlRequest(CREATE_LOC_M, { input }),
-    onSuccess: (data, vars, ctx) => {
+    onSuccess: (...args) => {
       qc.invalidateQueries({ queryKey: ["locations"] })
-      opts?.onSuccess?.(data, vars, ctx)
+      ;(opts?.onSuccess as ((...a: typeof args) => void) | undefined)?.(...args)
     },
   })
 }
@@ -343,30 +344,31 @@ export function useUpdateLocation(
   opts?: UseMutationOptions<
     unknown,
     Error,
-    { id: string; input: UpdateLocInput }
+    { id: string; input: UpdateLocInput },
+    unknown
   >,
 ) {
   const qc = useQueryClient()
   return useMutation({
     ...opts,
     mutationFn: ({ id, input }) => gqlRequest(UPDATE_LOC_M, { id, input }),
-    onSuccess: (data, vars, ctx) => {
+    onSuccess: (...args) => {
       qc.invalidateQueries({ queryKey: ["locations"] })
-      opts?.onSuccess?.(data, vars, ctx)
+      ;(opts?.onSuccess as ((...a: typeof args) => void) | undefined)?.(...args)
     },
   })
 }
 
 export function useDeleteLocation(
-  opts?: UseMutationOptions<unknown, Error, string>,
+  opts?: UseMutationOptions<unknown, Error, string, unknown>,
 ) {
   const qc = useQueryClient()
   return useMutation({
     ...opts,
     mutationFn: (id: string) => gqlRequest(DELETE_LOC_M, { id }),
-    onSuccess: (data, vars, ctx) => {
+    onSuccess: (...args) => {
       qc.invalidateQueries({ queryKey: ["locations"] })
-      opts?.onSuccess?.(data, vars, ctx)
+      ;(opts?.onSuccess as ((...a: typeof args) => void) | undefined)?.(...args)
     },
   })
 }

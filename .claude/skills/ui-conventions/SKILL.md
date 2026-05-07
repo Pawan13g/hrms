@@ -50,7 +50,7 @@ Treat these as the current default; revisit if a new sample contradicts.
 
 | Use | Token |
 | --- | --- |
-| Primary action (buttons, focus ring, active nav pill) | `violet-600`; hover `violet-700`; subtle bg `violet-50` |
+| Primary action (buttons, focus ring, active nav pill) | `primary/600`; hover `primary/700`; subtle bg `primary/50` |
 | Page canvas | `bg-slate-50` |
 | Card / surface | `bg-white` with `border border-slate-200`, `rounded-xl`, `shadow-sm` |
 | Sidebar (dark icon-only column) | `bg-slate-900`; icon idle `text-slate-400`; hover `bg-slate-800 text-white`; active `bg-violet-600 text-white` |
@@ -85,27 +85,6 @@ Use soft-bg + colored-text pills, `rounded-full px-2 py-0.5 text-xs font-medium`
 - Headings: `font-semibold tracking-tight`. Page title `text-2xl`, card title `text-lg`.
 - Body: default weight, `text-sm` is the workhorse size.
 - Labels: `text-sm font-medium text-slate-700`.
-
-## Layout
-
-### App shell (every authenticated page)
-
-```
-┌──┬─────────────────────────────┐
-│  │  Topbar (search, bell, me)  │
-│Sb│─────────────────────────────│
-│  │                             │
-│  │  Main content (cards)       │
-│  │                             │
-└──┴─────────────────────────────┘
-```
-
-- Sidebar: `w-16`, dark, icons only, `Sidebar` component.
-- Topbar: `h-14`, white, `Topbar` component.
-- Main: `bg-slate-50`, `p-6`, scrolls; content lives in white cards.
-- The `(app)` route group's layout wraps all of this, plus a client-side
-  auth guard that redirects to `/login` when there's no `hrms.access`
-  token.
 
 ### Forms with stepper (samples 1, 2, 5)
 

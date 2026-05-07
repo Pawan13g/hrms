@@ -30,104 +30,125 @@ These rows mirror M1 lines from the source checklist that *are* the frontend.
 
 ---
 
-## Required from completed backend — frontend pending
+## Required from completed backend — frontend done
 
 ### Org structure UI (backend M2 done)
 
-Source rows: departments tree, designations, locations, geography catalog,
-Org domain.
-
 #### Departments — tree CRUD
-- [ ] `/org/departments` list page rendering the tree (parent → children)
-- [ ] Create department dialog (name, code, optional parent)
-- [ ] Edit department (name, code, parent picker that excludes self + descendants — backend rejects too, but mirror client-side for UX)
-- [ ] Soft-delete confirmation flow (`deleteDepartment` mutation flips status to `deleted`)
-- [ ] TanStack Query hooks: `useDepartments`, `useCreateDepartment`, `useUpdateDepartment`, `useDeleteDepartment` with cache invalidation
+- [x] `/org/departments` list page rendering the tree (parent → children)
+- [x] Create department dialog (name, code, optional parent) — shadcn Dialog + shadcn Form
+- [x] Edit department (name, code, parent picker that excludes self + descendants)
+- [x] Soft-delete confirmation flow
+- [x] TanStack Query hooks with cache invalidation + Sonner toasts
 
 #### Designations
-- [ ] `/org/designations` list page (filter by department)
-- [ ] Create designation form (title, level, departmentId)
-- [ ] Edit designation
-- [ ] Soft-delete confirmation
-- [ ] TanStack Query hooks for queries + mutations
+- [x] `/org/designations` list page (filter by department) — shadcn Table + Badge
+- [x] Create/Edit designation (title, level, departmentId) — shadcn Form
+- [x] Soft-delete confirmation + toast
 
 #### Locations
-- [ ] `/org/locations` list page
-- [ ] Create location form with country → state → city dependent dropdowns
-- [ ] IANA timezone picker (use `Intl.supportedValuesOf("timeZone")`); validate before submit (backend uses `time.LoadLocation`)
-- [ ] Edit location
-- [ ] Soft-delete confirmation
+- [x] `/org/locations` list page — shadcn Table + Badge
+- [x] Create/Edit location form with GeographyPicker + TimezonePicker — shadcn Form
+- [x] Soft-delete confirmation + toast
 
 #### Geography (read-only consumers)
-- [ ] `<CountrySelect />` — fetches `countries` query, sorts by name
-- [ ] `<StateSelect countryId>` — disabled until a country is chosen
-- [ ] `<CitySelect stateId>` — disabled until a state is chosen
-- [ ] Composed `<GeographyPicker />` form control reusable in location / employee forms
+- [x] `<CountrySelect />`, `<StateSelect />`, `<CitySelect />`, `<GeographyPicker />` — all shadcn Select (Radix)
 
 ### Employee UI (backend M3 done)
 
-Source rows: Employee CRUD, Directory list with pagination/filter/sort,
-Reporting hierarchy via `manager_id`.
-
 #### Directory
-- [ ] `/employees` directory page
-- [ ] Server-driven pagination — consume `EmployeeConnection.edges/pageInfo/totalCount`, send `first` + `after` cursor
-- [ ] Filter UI: search box + status / department / designation / location / manager dropdowns (matches `EmployeeFilter` input)
-- [ ] Sort UI: `EmployeeSort` enum (`CREATED_DESC`, `CREATED_ASC`, `NAME_ASC`, `NAME_DESC`, `JOINING_DESC`, `JOINING_ASC`)
-- [ ] Empty state, loading skeleton, error toast
+- [x] `/employees` directory page with Relay pagination, filter, sort
+- [x] Empty state, loading state, error display
 
 #### Profile page
-- [ ] `/employees/[id]` profile route
-- [ ] Render every backend-exposed field (code, names, contact, dates, employment type, FK names)
-- [ ] Show reporting context: manager + direct reports list (uses `employees(filter: { managerId: <id> })`)
+- [x] `/employees/[id]` profile with all fields + manager + direct reports
 
 #### CRUD forms
-- [ ] `/employees/new` — create form following the RHF + Zod template from the `ui-conventions` skill
-- [ ] `/employees/[id]/edit` — edit form, only changed fields submitted (mirror backend `UpdateEmployeeInput` partial semantics)
-- [ ] Manager picker that excludes the current employee + their descendants (UX layer; backend enforces with `IsDescendant`)
-- [ ] Department / Designation / Location dropdowns sourced from the org module queries
-- [ ] Date validation: `joiningDate <= today`, ISO `yyyy-mm-dd` (mirrors `validateJoining` in backend)
+- [x] `/employees/new` + `/employees/[id]/edit` — shadcn Form + Zod + toasts
+
+### Roles & Permissions (Feature 001 — backend done)
+
+- [x] `/settings/roles` list, `/settings/roles/new`, `/settings/roles/[id]`, `/settings/roles/[id]/edit`
+- [x] `lib/roles.ts` — all 10 TanStack Query hooks
+- [x] Permission checklist with shadcn Checkbox grouped by domain
+
+---
+
+## Remaining — frontend pending
+
+### Employee profile enhancements
+
+- [ ] "Roles" section on employee profile: list assigned roles as Badges
+- [ ] "Assign role" shadcn Select dropdown on profile → `assignRole` mutation → toast
+- [ ] "Remove" button on each role badge → `revokeRole` mutation → toast (guard: can't remove own Admin)
 
 ### Reporting hierarchy
 
-- [ ] Direct-reports list on the profile page
 - [ ] (Stretch) `/org/chart` org-tree visualization built from `employees` traversed by `managerId`
 
-### Audit visibility (partial — backend write done, read query pending)
+### Tenant context
 
-The backend writes audit rows on every employee mutation, but no `auditLogs`
-GraphQL query is exposed yet. Frontend audit viewer is **blocked** on that.
+- [ ] Wire tenant name from viewer query into Topbar `tenantLabel` prop — so the user sees which org they're in
+- [ ] Decode JWT to extract tenant info client-side, or query `viewer` on app shell mount
 
-- [ ] Audit history section on employee profile (BLOCKED: backend `auditLogs` resolver missing)
+### Dashboard — real content
+
+- [ ] Replace placeholder "Viewer" card with real dashboard widgets:
+  - [ ] Total employees count card
+  - [ ] Department breakdown card (counts per department)
+  - [ ] Recent hires list (last 5 employees by joining date)
+  - [ ] Quick actions card (links to create employee, create department, etc.)
+
+### Permission-based UI guards
+
+- [ ] Hide sidebar "Settings" link when user lacks `rbac.manage` permission
+- [ ] Hide "Edit"/"Archive" buttons on entities when user lacks the required permission (`org.write`, `employee.write`, `employee.delete`)
+- [ ] Show "Insufficient permissions" toast when a mutation returns `rbac: forbidden` (global GraphQL error handler)
+- [ ] Create a `useViewerPermissions()` hook that reads perms from the viewer query or JWT decode
+
+### Audit visibility
+
+- [ ] Backend: expose `auditLogs(entityType, entityId)` GraphQL query
+- [ ] Frontend: "Activity" / "History" tab on employee profile page showing audit entries
+- [ ] Frontend: Audit log viewer page under `/settings/audit` (optional)
+
+### UX polish
+
+- [ ] Loading skeletons (shadcn Skeleton) instead of plain "Loading..." text on all list pages
+- [ ] Breadcrumb navigation component in the topbar (e.g. Settings > Roles > Admin)
+- [ ] Responsive mobile sidebar (Sheet-based slide-out on small screens)
+- [ ] Empty state illustrations on directory/list pages
+- [ ] Confirmation before navigating away from dirty forms (unsaved changes warning)
+- [ ] Bulk actions on employee directory (multi-select → bulk archive/department change)
+
+### Search & locator
+
+- [ ] Wire locator search to backend `employees(filter: { search })` for real employee lookup results
+- [ ] Show recent employees in locator results
 
 ---
 
-## Cross-cutting (from completed cross-cutting rows)
+## Cross-cutting
 
-Source rows: GraphQL pagination = Relay (line 11 of source); soft delete via
-status; UNIX UTC timestamps; tenant_id middleware; multi-tenancy isolation
-enforced on every query.
-
-- [ ] All paginated lists consume the Relay shape (`edges`, `pageInfo`, `totalCount`) — establish a shared `<RelayList />` or hook so future modules don't reinvent
-- [ ] Soft-delete UX is non-destructive — confirmation copy says "Deactivate" / "Archive"; never "permanently delete"
-- [ ] Render UNIX UTC timestamps with `Intl.DateTimeFormat` at the user's tz (or the employee's `location.timezone` on profile pages, per the deferred "Tenant timezone surfaced via `locations.timezone` only at render time" rule)
-- [x] Auth-protected routes redirect to `/login` if no `hrms.access` token is present — `app/(app)/layout.tsx` client guard
-- [ ] Tenant context: surface tenant code / name from JWT in app shell so the user knows which org they're in (Topbar has a `tenantLabel` prop slot but it's not yet wired to the JWT — needs a JWT-decode + viewer-query hop)
-- [x] `Authorization: Bearer <access>` header attached to every GraphQL request via `gqlRequest()` — `frontend/src/lib/graphql.ts`
-- [x] Refresh-token rotation: when a query returns 401, call `/auth/refresh`, update tokens, retry once — single-flight refresh in `frontend/src/lib/auth-tokens.ts`
-- [ ] Every mutation form follows the template in `.claude/skills/ui-conventions/SKILL.md` (RHF + Zod, `noValidate`, `text-xs text-red-600` for field errors, `text-sm text-red-600` for form-level errors)
+- [x] All paginated lists consume Relay shape (`edges`, `pageInfo`, `totalCount`)
+- [x] Soft-delete UX is non-destructive — "Archive" language
+- [x] UNIX UTC timestamps rendered with `Intl.DateTimeFormat`
+- [x] Auth-protected routes redirect to `/login`
+- [x] `Authorization: Bearer` header on all GraphQL requests
+- [x] Refresh-token rotation with single-flight retry
+- [x] All forms use shadcn Form (`FormField`, `FormItem`, `FormLabel`, `FormControl`, `FormMessage`)
+- [x] All mutations use Sonner toasts
+- [x] Dark/light mode with `next-themes` + `dark:` classes throughout
+- [x] All selects use shadcn Select (Radix) — no native `<select>`
+- [ ] Tenant context visible in app shell (pending)
+- [ ] Permission-based UI guards (pending)
 
 ---
 
-## Out of scope for this checklist
+## Out of scope
 
-These are **not** included because the corresponding backend rows in the
-source checklist are still `[ ]`:
-
-- RBAC management screens (roles, permissions, role↔permission, user↔role) — backend pending
-- Custom fields builder / dynamic form rendering — backend pending (M4)
-- Per-role field permissions on employee read/write — backend pending
-- Audit log viewer — backend write side done, but read query (`auditLogs`) not exposed yet
-- Postgres RLS surface — backend defense-in-depth (no frontend impact)
-- Tenant timezone *rendering* across the app (only listed above as a
-  cross-cutting reminder; full rollout waits on M3 profile page)
+- Custom fields builder / dynamic form rendering (M4 backend pending)
+- Per-role field permissions on employee read/write (backend pending)
+- Postgres RLS surface (backend defense-in-depth, no frontend impact)
+- Invitation flow with role pre-assignment (future feature)
+- Role hierarchy / inheritance (keep flat for v1)

@@ -1,0 +1,73 @@
+"""
+Role is a tenant-scoped set of permissions assignable to users.
+System roles (is_system=true) are auto-created at registration and cannot be
+deleted or renamed.
+"""
+type Role {
+  id: ID!
+  name: String!
+  description: String
+  isSystem: Boolean!
+  status: String!
+  permissions: [RolePermission!]!
+  userCount: Int!
+  createdAt: Int!
+}
+
+"""
+RolePermission is a permission key with its database id, used for the
+permission checklist when editing a role.
+"""
+type RolePermission {
+  id: ID!
+  key: String!
+  description: String
+}
+
+"""
+UserRole is a mapping of a user to a role, returned when querying which roles
+a specific user holds.
+"""
+type UserRole {
+  userId: ID!
+  roleId: ID!
+  roleName: String!
+}
+
+"""
+RoleUser is a user assigned to a role — minimal surface for the "Assigned
+Users" list on the role detail page.
+"""
+type RoleUser {
+  userId: ID!
+  email: String!
+}
+
+input CreateRoleInput {
+  name: String!
+  description: String
+  permissionIds: [ID!]!
+}
+
+input UpdateRoleInput {
+  name: String
+  description: String
+  status: String
+}
+
+extend type Query {
+  roles: [Role!]!                              @hasPermission(key: "rbac.manage")
+  role(id: ID!): Role                          @hasPermission(key: "rbac.manage")
+  allPermissions: [RolePermission!]!           @hasPermission(key: "rbac.manage")
+  userRoles(userId: ID!): [UserRole!]!         @hasPermission(key: "rbac.manage")
+  usersWithRole(roleId: ID!): [RoleUser!]!   @hasPermission(key: "rbac.manage")
+}
+
+extend type Mutation {
+  createRole(input: CreateRoleInput!): Role!                         @hasPermission(key: "rbac.manage")
+  updateRole(id: ID!, input: UpdateRoleInput!): Role!                @hasPermission(key: "rbac.manage")
+  deleteRole(id: ID!): Boolean!                                      @hasPermission(key: "rbac.manage")
+  setRolePermissions(roleId: ID!, permissionIds: [ID!]!): Role!      @hasPermission(key: "rbac.manage")
+  assignRole(userId: ID!, roleId: ID!): Boolean!                     @hasPermission(key: "rbac.manage")
+  revokeRole(userId: ID!, roleId: ID!): Boolean!                     @hasPermission(key: "rbac.manage")
+}

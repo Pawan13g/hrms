@@ -5,6 +5,7 @@ import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { Pencil, Plus, Trash2 } from "lucide-react"
+import { toast } from "sonner"
 import {
   CreateLocInput,
   Location,
@@ -18,11 +19,30 @@ import {
   Dialog,
   DialogBody,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { Badge } from "@/components/ui/badge"
+import { Card } from "@/components/ui/card"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import {
   GeographyPicker,
   type GeographyValue,
@@ -34,7 +54,10 @@ export default function LocationsPage() {
   const [editing, setEditing] = useState<Location | null>(null)
   const [creating, setCreating] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState<Location | null>(null)
-  const del = useDeleteLocation({ onSuccess: () => setConfirmDelete(null) })
+  const del = useDeleteLocation({
+    onSuccess: () => { toast.success("Location archived"); setConfirmDelete(null) },
+    onError: (err) => { toast.error("Archive failed", { description: (err as Error).message }) },
+  })
 
   return (
     <div className="space-y-4">
@@ -45,49 +68,54 @@ export default function LocationsPage() {
         </Button>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+      <Card className="overflow-hidden">
         {q.isLoading ? (
-          <div className="p-6 text-sm text-slate-600">Loading…</div>
+          <div className="p-6 text-sm text-muted-foreground">Loading...</div>
         ) : q.error ? (
-          <div className="p-6 text-sm text-red-600">
+          <div className="p-6 text-sm text-destructive">
             {(q.error as Error).message}
           </div>
         ) : (q.data ?? []).length === 0 ? (
-          <div className="p-10 text-center text-sm text-slate-600">
+          <div className="p-10 text-center text-sm text-muted-foreground">
             No locations yet. Create one to start adding employees.
           </div>
         ) : (
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-              <tr>
-                <th className="px-4 py-3 font-medium">Name</th>
-                <th className="px-4 py-3 font-medium">Address</th>
-                <th className="px-4 py-3 font-medium">Timezone</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                <th
-                  className="w-24 px-4 py-3 font-medium"
-                  aria-label="Actions"
-                />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/50 hover:bg-muted/50">
+                <TableHead className="px-4 text-xs uppercase tracking-wide">
+                  Name
+                </TableHead>
+                <TableHead className="px-4 text-xs uppercase tracking-wide">
+                  Address
+                </TableHead>
+                <TableHead className="px-4 text-xs uppercase tracking-wide">
+                  Timezone
+                </TableHead>
+                <TableHead className="px-4 text-xs uppercase tracking-wide">
+                  Status
+                </TableHead>
+                <TableHead className="w-24 px-4" aria-label="Actions" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {q.data!.map((l) => (
-                <tr key={l.id} className="group hover:bg-slate-50">
-                  <td className="px-4 py-3 font-medium text-slate-900">
+                <TableRow key={l.id} className="group">
+                  <TableCell className="px-4 font-medium text-foreground">
                     {l.name}
-                  </td>
-                  <td className="px-4 py-3 text-slate-600">
+                  </TableCell>
+                  <TableCell className="px-4 text-muted-foreground">
                     {[l.addressLine1, l.addressLine2, l.pincode]
                       .filter(Boolean)
-                      .join(", ") || "—"}
-                  </td>
-                  <td className="px-4 py-3 text-slate-600">
-                    {l.timezone ?? "—"}
-                  </td>
-                  <td className="px-4 py-3">
-                    <StatusChip status={l.status} />
-                  </td>
-                  <td className="px-4 py-3">
+                      .join(", ") || "\u2014"}
+                  </TableCell>
+                  <TableCell className="px-4 text-muted-foreground">
+                    {l.timezone ?? "\u2014"}
+                  </TableCell>
+                  <TableCell className="px-4">
+                    <StatusBadge status={l.status} />
+                  </TableCell>
+                  <TableCell className="px-4">
                     <div className="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                       <Button
                         variant="ghost"
@@ -106,13 +134,13 @@ export default function LocationsPage() {
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         )}
-      </div>
+      </Card>
 
       {creating && (
         <LocationForm mode="create" onClose={() => setCreating(false)} />
@@ -127,11 +155,18 @@ export default function LocationsPage() {
       {confirmDelete && (
         <Dialog open onOpenChange={() => setConfirmDelete(null)}>
           <DialogContent className="max-w-md">
-            <DialogHeader
-              title="Archive location?"
-              description={`"${confirmDelete.name}" will be marked as deleted. Soft-delete only — historical employee records keep their reference.`}
-              onClose={() => setConfirmDelete(null)}
-            />
+            <DialogHeader>
+              <DialogTitle>Archive location?</DialogTitle>
+              <DialogDescription>
+                &ldquo;{confirmDelete.name}&rdquo; will be marked as deleted.
+                Soft-delete only — historical employee records keep their reference.
+              </DialogDescription>
+            </DialogHeader>
+            {del.error && (
+              <p className="px-6 text-sm text-destructive">
+                {(del.error as Error).message}
+              </p>
+            )}
             <DialogFooter>
               <Button
                 variant="secondary"
@@ -145,14 +180,9 @@ export default function LocationsPage() {
                 onClick={() => del.mutate(confirmDelete.id)}
                 disabled={del.isPending}
               >
-                {del.isPending ? "Archiving…" : "Archive"}
+                {del.isPending ? "Archiving..." : "Archive"}
               </Button>
             </DialogFooter>
-            {del.error && (
-              <p className="px-6 pb-4 text-sm text-red-600">
-                {(del.error as Error).message}
-              </p>
-            )}
           </DialogContent>
         </Dialog>
       )}
@@ -160,19 +190,17 @@ export default function LocationsPage() {
   )
 }
 
-function StatusChip({ status }: { status: string }) {
-  const cls =
+function StatusBadge({ status }: { status: string }) {
+  const variant =
     status === "active"
-      ? "bg-emerald-50 text-emerald-700"
+      ? "success"
       : status === "inactive"
-        ? "bg-amber-50 text-amber-700"
-        : "bg-slate-100 text-slate-700"
+        ? "warning"
+        : ("secondary" as const)
   return (
-    <span
-      className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${cls}`}
-    >
+    <Badge variant={variant} className="capitalize">
       {status}
-    </span>
+    </Badge>
   )
 }
 
@@ -200,16 +228,17 @@ function LocationForm({
   existing?: Location
   onClose: () => void
 }) {
-  const create = useCreateLocation({ onSuccess: onClose })
-  const update = useUpdateLocation({ onSuccess: onClose })
+  const create = useCreateLocation({
+    onSuccess: () => { toast.success(mode === "create" ? "Location created" : "Location updated"); onClose() },
+    onError: (err) => { toast.error("Failed", { description: err.message }) },
+  })
+  const update = useUpdateLocation({
+    onSuccess: () => { toast.success("Location updated"); onClose() },
+    onError: (err) => { toast.error("Failed", { description: err.message }) },
+  })
   const submitting = create.isPending || update.isPending
 
-  const {
-    register,
-    handleSubmit,
-    control,
-    formState: { errors },
-  } = useForm<FormValues>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: existing?.name ?? "",
@@ -243,96 +272,83 @@ function LocationForm({
     }
   }
 
-  const err = (create.error ?? update.error) as Error | null
-
   return (
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="max-w-2xl">
-        <DialogHeader
-          title={mode === "create" ? "New location" : "Edit location"}
-          description={
-            mode === "create"
+        <DialogHeader>
+          <DialogTitle>
+            {mode === "create" ? "New location" : "Edit location"}
+          </DialogTitle>
+          <DialogDescription>
+            {mode === "create"
               ? "Add a physical office or hub."
-              : `Editing "${existing?.name}".`
-          }
-          onClose={onClose}
-        />
-        <form onSubmit={handleSubmit(onSubmit)} noValidate>
-          <DialogBody>
-            <div className="space-y-4">
-              <div className="space-y-1">
-                <Label htmlFor="name">Name</Label>
-                <Input
-                  id="name"
-                  placeholder="Acme HQ"
-                  {...register("name")}
+              : `Editing "${existing?.name}".`}
+          </DialogDescription>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
+            <DialogBody>
+              <div className="space-y-4">
+                <FormField control={form.control} name="name" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Name</FormLabel>
+                    <FormControl><Input placeholder="Acme HQ" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="addressLine1" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Address line 1</FormLabel>
+                    <FormControl><Input {...field} /></FormControl>
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="addressLine2" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Address line 2</FormLabel>
+                    <FormControl><Input {...field} /></FormControl>
+                  </FormItem>
+                )} />
+
+                <Controller
+                  control={form.control}
+                  name="geo"
+                  render={({ field }) => (
+                    <GeographyPicker
+                      value={field.value as GeographyValue}
+                      onChange={field.onChange}
+                    />
+                  )}
                 />
-                {errors.name && (
-                  <p className="text-xs text-red-600">{errors.name.message}</p>
-                )}
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="addressLine1">Address line 1</Label>
-                <Input id="addressLine1" {...register("addressLine1")} />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="addressLine2">Address line 2</Label>
-                <Input id="addressLine2" {...register("addressLine2")} />
-              </div>
 
-              <Controller
-                control={control}
-                name="geo"
-                render={({ field }) => (
-                  <GeographyPicker
-                    value={field.value as GeographyValue}
-                    onChange={field.onChange}
-                  />
-                )}
-              />
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <Label htmlFor="pincode">Pincode</Label>
-                  <Input id="pincode" {...register("pincode")} />
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="timezone">Timezone</Label>
-                  <Controller
-                    control={control}
-                    name="timezone"
-                    render={({ field }) => (
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField control={form.control} name="pincode" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Pincode</FormLabel>
+                      <FormControl><Input {...field} /></FormControl>
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="timezone" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Timezone</FormLabel>
                       <TimezonePicker
-                        id="timezone"
                         value={field.value as string | null}
                         onChange={(v) => field.onChange(v ?? "")}
                       />
-                    )}
-                  />
+                    </FormItem>
+                  )} />
                 </div>
               </div>
-
-              {err && <p className="text-sm text-red-600">{err.message}</p>}
-            </div>
-          </DialogBody>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={onClose}
-              disabled={submitting}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting
-                ? "Saving…"
-                : mode === "create"
-                  ? "Create"
-                  : "Save changes"}
-            </Button>
-          </DialogFooter>
-        </form>
+            </DialogBody>
+            <DialogFooter>
+              <Button type="button" variant="secondary" onClick={onClose} disabled={submitting}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={submitting}>
+                {submitting ? "Saving..." : mode === "create" ? "Create" : "Save changes"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   )

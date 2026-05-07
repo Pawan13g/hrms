@@ -107,8 +107,12 @@ func (r *queryResolver) Employee(ctx context.Context, id string) (*model.Employe
 	return toGQLEmployee(e), nil
 }
 
-// ----- helpers (kept here so they stay close to the generated types) -----
-
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
 func toCreateEmployeeInput(in model.CreateEmployeeInput) (employee.CreateInput, error) {
 	joining, err := parseDate(in.JoiningDate)
 	if err != nil {
@@ -150,7 +154,6 @@ func toCreateEmployeeInput(in model.CreateEmployeeInput) (employee.CreateInput, 
 		ManagerID:      mgr,
 	}, nil
 }
-
 func toUpdateEmployeeInput(in model.UpdateEmployeeInput) (employee.UpdateInput, error) {
 	joining, err := parseDatePtr(in.JoiningDate)
 	if err != nil {
@@ -193,7 +196,6 @@ func toUpdateEmployeeInput(in model.UpdateEmployeeInput) (employee.UpdateInput, 
 		Status:         in.Status,
 	}, nil
 }
-
 func toServiceFilter(f *model.EmployeeFilter) (employee.Filter, error) {
 	if f == nil {
 		return employee.Filter{}, nil
@@ -223,7 +225,6 @@ func toServiceFilter(f *model.EmployeeFilter) (employee.Filter, error) {
 		ManagerID:     mgr,
 	}, nil
 }
-
 func toGQLEmployeeConnection(p employee.Page) *model.EmployeeConnection {
 	edges := make([]*model.EmployeeEdge, 0, len(p.Items))
 	for i := range p.Items {
@@ -253,12 +254,6 @@ func toGQLEmployeeConnection(p employee.Page) *model.EmployeeConnection {
 		TotalCount: p.TotalCount,
 	}
 }
-
-// cursorAt returns the encoded cursor for the i-th edge. Per-row cursor
-// encoding would require exposing the sort key from the repo; for v1 we
-// reuse the page's start/end cursors at the boundaries and fall back to the
-// end cursor for middle rows. Clients only need the end cursor to paginate
-// forward, so this is correct in practice.
 func cursorAt(p employee.Page, i int) string {
 	if i == 0 && p.StartCursor != "" {
 		return p.StartCursor

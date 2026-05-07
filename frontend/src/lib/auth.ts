@@ -28,8 +28,12 @@ export async function login(input: LoginInput): Promise<LoginResponse> {
 
 export type RegisterInput = {
   tenantName: string
+  firstName: string
+  lastName: string
   email: string
   password: string
+  countryId?: number | null
+  cityId?: number | null
 }
 
 export type RegisterResponse = {

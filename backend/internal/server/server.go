@@ -21,6 +21,7 @@ import (
 	"github.com/sodium-labs/hrms/backend/internal/modules/employee"
 	"github.com/sodium-labs/hrms/backend/internal/modules/geography"
 	"github.com/sodium-labs/hrms/backend/internal/modules/location"
+	"github.com/sodium-labs/hrms/backend/internal/modules/role"
 )
 
 type Deps struct {
@@ -72,12 +73,14 @@ func New(d Deps) *gin.Engine {
 	desigSvc := designation.NewService(designation.NewRepo(d.PG), deptSvc)
 	locSvc := location.NewService(location.NewRepo(d.PG))
 	empSvc := employee.NewService(employee.NewRepo(d.PG), d.Audit, deptSvc, desigSvc, locSvc)
+	roleSvc := role.NewService(role.NewRepo(d.PG))
 	res := &resolver.Resolver{
 		DeptSvc:  deptSvc,
 		DesigSvc: desigSvc,
 		LocSvc:   locSvc,
 		EmpSvc:   empSvc,
 		GeoRepo:  geography.NewRepo(d.PG),
+		RoleSvc:  roleSvc,
 	}
 	gqlHandler := graph.NewHandler(res)
 	r.Any("/graphql", gin.WrapH(gqlHandler))

@@ -10,6 +10,7 @@ import (
 	"github.com/sodium-labs/hrms/backend/internal/modules/employee"
 	"github.com/sodium-labs/hrms/backend/internal/modules/geography"
 	"github.com/sodium-labs/hrms/backend/internal/modules/location"
+	"github.com/sodium-labs/hrms/backend/internal/modules/role"
 )
 
 // Resolver carries the per-module services that GraphQL fields delegate to.
@@ -26,4 +27,5 @@ type Resolver struct {
 	LocSvc   *location.Service
 	EmpSvc   *employee.Service
 	GeoRepo  *geography.Repo
+	RoleSvc  *role.Service
 }

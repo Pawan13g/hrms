@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { Pencil, Plus, Trash2 } from "lucide-react"
+import { toast } from "sonner"
 import {
   Designation,
   useCreateDesignation,
@@ -18,12 +19,37 @@ import {
   Dialog,
   DialogBody,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select } from "@/components/ui/select"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Badge } from "@/components/ui/badge"
+import { Card } from "@/components/ui/card"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 
 export default function DesignationsPage() {
   const q = useDesignations()
@@ -32,10 +58,13 @@ export default function DesignationsPage() {
   const [editing, setEditing] = useState<Designation | null>(null)
   const [creating, setCreating] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState<Designation | null>(null)
-  const del = useDeleteDesignation({ onSuccess: () => setConfirmDelete(null) })
+  const del = useDeleteDesignation({
+    onSuccess: () => { toast.success("Designation archived"); setConfirmDelete(null) },
+    onError: (err) => { toast.error("Archive failed", { description: (err as Error).message }) },
+  })
 
   const deptName = (id: string | null) =>
-    id ? (dq.data?.find((d) => d.id === id)?.name ?? "—") : "—"
+    id ? (dq.data?.find((d) => d.id === id)?.name ?? "\u2014") : "\u2014"
 
   const filtered = useMemo(() => {
     if (!q.data) return []
@@ -48,16 +77,18 @@ export default function DesignationsPage() {
       <div className="flex items-center gap-3">
         <div className="w-64">
           <Select
-            aria-label="Filter by department"
-            value={filterDept}
-            onChange={(e) => setFilterDept(e.target.value)}
+            value={filterDept || "__all__"}
+            onValueChange={(v) => setFilterDept(v === "__all__" ? "" : v)}
           >
-            <option value="">All departments</option>
-            {dq.data?.map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.name}
-              </option>
-            ))}
+            <SelectTrigger className="h-10">
+              <SelectValue placeholder="All departments" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">All departments</SelectItem>
+              {dq.data?.map((d) => (
+                <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+              ))}
+            </SelectContent>
           </Select>
         </div>
         <div className="ml-auto">
@@ -68,42 +99,52 @@ export default function DesignationsPage() {
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+      <Card className="overflow-hidden">
         {q.isLoading ? (
-          <div className="p-6 text-sm text-slate-600">Loading…</div>
+          <div className="p-6 text-sm text-muted-foreground">Loading...</div>
         ) : q.error ? (
-          <div className="p-6 text-sm text-red-600">
+          <div className="p-6 text-sm text-destructive">
             {(q.error as Error).message}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="p-10 text-center text-sm text-slate-600">
+          <div className="p-10 text-center text-sm text-muted-foreground">
             No designations match this view.
           </div>
         ) : (
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-              <tr>
-                <th className="px-4 py-3 font-medium">Title</th>
-                <th className="px-4 py-3 font-medium">Department</th>
-                <th className="px-4 py-3 font-medium">Level</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                <th className="w-24 px-4 py-3 font-medium" aria-label="Actions" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/50 hover:bg-muted/50">
+                <TableHead className="px-4 text-xs uppercase tracking-wide">
+                  Title
+                </TableHead>
+                <TableHead className="px-4 text-xs uppercase tracking-wide">
+                  Department
+                </TableHead>
+                <TableHead className="px-4 text-xs uppercase tracking-wide">
+                  Level
+                </TableHead>
+                <TableHead className="px-4 text-xs uppercase tracking-wide">
+                  Status
+                </TableHead>
+                <TableHead className="w-24 px-4" aria-label="Actions" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {filtered.map((d) => (
-                <tr key={d.id} className="group hover:bg-slate-50">
-                  <td className="px-4 py-3 font-medium text-slate-900">
+                <TableRow key={d.id} className="group">
+                  <TableCell className="px-4 font-medium text-foreground">
                     {d.title}
-                  </td>
-                  <td className="px-4 py-3 text-slate-600">
+                  </TableCell>
+                  <TableCell className="px-4 text-muted-foreground">
                     {deptName(d.departmentId)}
-                  </td>
-                  <td className="px-4 py-3 text-slate-600">{d.level ?? "—"}</td>
-                  <td className="px-4 py-3">
-                    <StatusChip status={d.status} />
-                  </td>
-                  <td className="px-4 py-3">
+                  </TableCell>
+                  <TableCell className="px-4 text-muted-foreground">
+                    {d.level ?? "\u2014"}
+                  </TableCell>
+                  <TableCell className="px-4">
+                    <StatusBadge status={d.status} />
+                  </TableCell>
+                  <TableCell className="px-4">
                     <div className="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                       <Button
                         variant="ghost"
@@ -122,13 +163,13 @@ export default function DesignationsPage() {
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         )}
-      </div>
+      </Card>
 
       {creating && (
         <DesignationForm mode="create" onClose={() => setCreating(false)} />
@@ -143,11 +184,18 @@ export default function DesignationsPage() {
       {confirmDelete && (
         <Dialog open onOpenChange={() => setConfirmDelete(null)}>
           <DialogContent className="max-w-md">
-            <DialogHeader
-              title="Archive designation?"
-              description={`"${confirmDelete.title}" will be marked as deleted. Soft-delete only — audit history is preserved.`}
-              onClose={() => setConfirmDelete(null)}
-            />
+            <DialogHeader>
+              <DialogTitle>Archive designation?</DialogTitle>
+              <DialogDescription>
+                &ldquo;{confirmDelete.title}&rdquo; will be marked as deleted.
+                Soft-delete only — audit history is preserved.
+              </DialogDescription>
+            </DialogHeader>
+            {del.error && (
+              <p className="px-6 text-sm text-destructive">
+                {(del.error as Error).message}
+              </p>
+            )}
             <DialogFooter>
               <Button
                 variant="secondary"
@@ -161,14 +209,9 @@ export default function DesignationsPage() {
                 onClick={() => del.mutate(confirmDelete.id)}
                 disabled={del.isPending}
               >
-                {del.isPending ? "Archiving…" : "Archive"}
+                {del.isPending ? "Archiving..." : "Archive"}
               </Button>
             </DialogFooter>
-            {del.error && (
-              <p className="px-6 pb-4 text-sm text-red-600">
-                {(del.error as Error).message}
-              </p>
-            )}
           </DialogContent>
         </Dialog>
       )}
@@ -176,19 +219,17 @@ export default function DesignationsPage() {
   )
 }
 
-function StatusChip({ status }: { status: string }) {
-  const cls =
+function StatusBadge({ status }: { status: string }) {
+  const variant =
     status === "active"
-      ? "bg-emerald-50 text-emerald-700"
+      ? "success"
       : status === "inactive"
-        ? "bg-amber-50 text-amber-700"
-        : "bg-slate-100 text-slate-700"
+        ? "warning"
+        : ("secondary" as const)
   return (
-    <span
-      className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${cls}`}
-    >
+    <Badge variant={variant} className="capitalize">
       {status}
-    </span>
+    </Badge>
   )
 }
 
@@ -212,15 +253,17 @@ function DesignationForm({
   onClose: () => void
 }) {
   const dq = useDepartments()
-  const create = useCreateDesignation({ onSuccess: onClose })
-  const update = useUpdateDesignation({ onSuccess: onClose })
+  const create = useCreateDesignation({
+    onSuccess: () => { toast.success(mode === "create" ? "Designation created" : "Designation updated"); onClose() },
+    onError: (err) => { toast.error("Failed", { description: err.message }) },
+  })
+  const update = useUpdateDesignation({
+    onSuccess: () => { toast.success("Designation updated"); onClose() },
+    onError: (err) => { toast.error("Failed", { description: err.message }) },
+  })
   const submitting = create.isPending || update.isPending
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<FormValues>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: existing?.title ?? "",
@@ -247,81 +290,72 @@ function DesignationForm({
     }
   }
 
-  const err = (create.error ?? update.error) as Error | null
-
   return (
     <Dialog open onOpenChange={onClose}>
       <DialogContent>
-        <DialogHeader
-          title={mode === "create" ? "New designation" : "Edit designation"}
-          description={
-            mode === "create"
+        <DialogHeader>
+          <DialogTitle>
+            {mode === "create" ? "New designation" : "Edit designation"}
+          </DialogTitle>
+          <DialogDescription>
+            {mode === "create"
               ? "Add a job title to the directory."
-              : `Editing "${existing?.title}".`
-          }
-          onClose={onClose}
-        />
-        <form onSubmit={handleSubmit(onSubmit)} noValidate>
-          <DialogBody>
-            <div className="space-y-4">
-              <div className="space-y-1">
-                <Label htmlFor="title">Title</Label>
-                <Input id="title" {...register("title")} />
-                {errors.title && (
-                  <p className="text-xs text-red-600">{errors.title.message}</p>
-                )}
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <Label htmlFor="level">Level (optional)</Label>
-                  <Input
-                    id="level"
-                    type="number"
-                    min={0}
-                    max={99}
-                    {...register("level")}
-                  />
-                  {errors.level && (
-                    <p className="text-xs text-red-600">
-                      {errors.level.message as string}
-                    </p>
-                  )}
+              : `Editing "${existing?.title}".`}
+          </DialogDescription>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
+            <DialogBody>
+              <div className="space-y-4">
+                <FormField control={form.control} name="title" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Title</FormLabel>
+                    <FormControl><Input {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField control={form.control} name="level" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Level (optional)</FormLabel>
+                      <FormControl><Input type="number" min={0} max={99} {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="departmentId" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Department (optional)</FormLabel>
+                      <Select
+                        value={field.value || undefined}
+                        onValueChange={(v) => field.onChange(v === "__none__" ? "" : v)}
+                      >
+                        <SelectTrigger className="h-10">
+                          <SelectValue placeholder="None" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="__none__">None</SelectItem>
+                          {dq.data
+                            ?.filter((d) => d.status === "active")
+                            .map((d) => (
+                              <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )} />
                 </div>
-                <div className="space-y-1">
-                  <Label htmlFor="departmentId">Department (optional)</Label>
-                  <Select id="departmentId" {...register("departmentId")}>
-                    <option value="">None</option>
-                    {dq.data
-                      ?.filter((d) => d.status === "active")
-                      .map((d) => (
-                        <option key={d.id} value={d.id}>
-                          {d.name}
-                        </option>
-                      ))}
-                  </Select>
-                </div>
               </div>
-              {err && <p className="text-sm text-red-600">{err.message}</p>}
-            </div>
-          </DialogBody>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={onClose}
-              disabled={submitting}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting
-                ? "Saving…"
-                : mode === "create"
-                  ? "Create"
-                  : "Save changes"}
-            </Button>
-          </DialogFooter>
-        </form>
+            </DialogBody>
+            <DialogFooter>
+              <Button type="button" variant="secondary" onClick={onClose} disabled={submitting}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={submitting}>
+                {submitting ? "Saving..." : mode === "create" ? "Create" : "Save changes"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   )
