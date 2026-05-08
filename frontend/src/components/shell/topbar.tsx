@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Locator } from "@/components/shell/locator"
+import { SidebarTrigger } from "../ui/sidebar"
 
 const routeLabels: Record<string, string> = {
   "/dashboard": "Dashboard",
@@ -50,7 +51,8 @@ export function Topbar() {
   const crumbs = useBreadcrumbs()
 
   return (
-    <header className="flex h-14 shrink-0 items-center gap-2 bg-transparent px-4">
+    <header className="flex h-14 shrink-0 items-center gap-2 bg-transparent pr-4">
+      <SidebarTrigger/>
       {/* Breadcrumb */}
       <div className="flex items-center gap-1.5 text-sm">
         {crumbs.map((crumb, i) => (

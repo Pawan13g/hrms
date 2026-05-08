@@ -63,28 +63,9 @@ CREATE TABLE custom_modules (
 CREATE UNIQUE INDEX custom_modules_tenant_slug ON custom_modules(tenant_id, slug);
 ```
 
-**New table: `custom_module_records`**
-
-Each custom module stores its records (entities) in a generic table:
-
-```sql
-CREATE TABLE custom_module_records (
-    id          BIGSERIAL PRIMARY KEY,
-    tenant_id   BIGINT       NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
-    module_id   BIGINT       NOT NULL REFERENCES custom_modules(id) ON DELETE CASCADE,
-    title       VARCHAR(500) NOT NULL,      -- primary display field
-    status      VARCHAR(32)  NOT NULL DEFAULT 'active',
-    created_at  TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at  TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE INDEX custom_module_records_lookup
-    ON custom_module_records(tenant_id, module_id, status);
-```
-
 Custom module records store all their data via `custom_field_values` — the
 `entity_type` column uses the module slug (e.g. `"cm:assets"`) and `entity_id`
-references `custom_module_records.id`.
+references `custom_modules.id`.
 
 ### Module registry (system + custom)
 
@@ -101,15 +82,128 @@ The form builder and lookup fields need a unified list of available modules:
 The `cm:` prefix distinguishes custom modules from system modules in
 `entity_type` columns and form `module` references.
 
+### Form Sections
+
+Forms are divided into **sections** to visually group related fields. Each
+section renders as a collapsible Card with a title and optional description.
+
+**Hierarchy: Form → Sections → Fields**
+
+**New table: `custom_form_sections`**
+
+```sql
+CREATE TABLE custom_form_sections (
+    id              BIGSERIAL PRIMARY KEY,
+    tenant_id       BIGINT       NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    form_id         BIGINT       NOT NULL REFERENCES custom_forms(id) ON DELETE CASCADE,
+    name            VARCHAR(255) NOT NULL,
+    description     TEXT,
+    display_order   INTEGER      NOT NULL DEFAULT 0,
+    is_collapsible  BOOLEAN      NOT NULL DEFAULT TRUE,
+    is_default_open BOOLEAN      NOT NULL DEFAULT TRUE,
+    status          VARCHAR(32)  NOT NULL DEFAULT 'active',
+    created_at      TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX custom_form_sections_form ON custom_form_sections(form_id);
+```
+
+**Migration to link fields to sections:**
+
+```sql
+ALTER TABLE custom_fields ADD COLUMN section_id BIGINT
+    REFERENCES custom_form_sections(id) ON DELETE SET NULL;
+```
+
+Fields with `section_id = NULL` appear in an implicit "Unsectioned" group at
+the top of the form (backward compatible with fields that predate sections).
+
+**Key behaviors:**
+- Creating a new form auto-creates a default "General" section
+- Deleting a section sets `section_id = NULL` on its fields (fields are NOT deleted)
+- Sections and fields each have `display_order` for sorting within their parent
+
+**How sections render on entity pages:**
+
+```
+┌─ Employee Onboarding Form ──────────────────────┐
+│                                                   │
+│  ▾ Personal Details              [section 1]      │
+│  ┌───────────────────────────────────────────┐    │
+│  │  Blood Group:  [Select ▾]                 │    │
+│  │  Emergency Contact:  [____________]       │    │
+│  │  Emergency Phone:    [____________]       │    │
+│  └───────────────────────────────────────────┘    │
+│                                                   │
+│  ▾ Equipment & Access            [section 2]      │
+│  ┌───────────────────────────────────────────┐    │
+│  │  Laptop Assigned:  [Lookup → cm:assets ▾] │    │
+│  │  Badge ID:         [____________]         │    │
+│  │  Access Card:      [☐]                    │    │
+│  └───────────────────────────────────────────┘    │
+│                                                   │
+│  ▸ Bank Details (collapsed)      [section 3]      │
+│                                                   │
+└───────────────────────────────────────────────────┘
+```
+
+**GraphQL types:**
+
+```graphql
+type CustomFormSection {
+  id: ID!
+  formId: ID!
+  name: String!
+  description: String
+  displayOrder: Int!
+  isCollapsible: Boolean!
+  isDefaultOpen: Boolean!
+  status: String!
+  fields: [CustomField!]!
+}
+
+type CustomForm {
+  id: ID!
+  name: String!
+  module: String!
+  displayOrder: Int!
+  isSystem: Boolean!
+  status: String!
+  sections: [CustomFormSection!]!   # replaces flat fields list
+  createdAt: Int!
+  updatedAt: Int!
+}
+
+input CreateSectionInput {
+  formId: ID!
+  name: String!
+  description: String
+  displayOrder: Int
+  isCollapsible: Boolean
+  isDefaultOpen: Boolean
+}
+
+input UpdateSectionInput {
+  name: String
+  description: String
+  displayOrder: Int
+  isCollapsible: Boolean
+  isDefaultOpen: Boolean
+  status: String
+}
+```
+
 ### How custom modules work end-to-end
 
 1. **Admin creates a custom module** (e.g. slug="assets", name="Company Assets")
-2. Module appears in sidebar under a "Custom" section
+2. Module appears in sidebar under a "Org Structure" section
 3. **Admin creates a form** linked to module `cm:assets`
-4. Admin adds fields to the form (e.g. "Asset Tag", "Purchase Date", "Assigned To" as lookup→employee)
-5. **Users navigate to `/modules/assets`** — see a DataTable of all records
-6. Users create a record with a title (e.g. "MacBook Pro #1234")
-7. The record detail page shows the custom form fields for data entry
+4. Admin adds sections to the form (e.g. "General", "Assignment Details")
+5. Admin adds fields to each section (e.g. "Asset Tag" in General, "Assigned To" as lookup→employee in Assignment Details)
+6. **Users navigate to `/modules/assets`** — see a DataTable of all records
+6. Users create a record with a fields data that is configured in form (e.g. "MacBook Pro #1234")
+7. The record detail page shows the fields of form for data entry
 8. Lookup fields resolve to system or other custom module records
 
 ### Supported field types (`data_type`)
@@ -220,7 +314,7 @@ extend type Mutation {
 | `/settings/modules/[slug]` | Module settings — edit name, manage forms |
 | `/modules/[slug]` | Module records DataTable (dynamic route) |
 | `/modules/[slug]/new` | Create record |
-| `/modules/[slug]/[id]` | Record detail — title + custom field forms |
+| `/modules/[slug]/[id]` | Record detail — custom field forms |
 
 ### Sidebar integration
 
@@ -254,6 +348,10 @@ item with its chosen icon.
 7. **Data type immutability** — cannot change `data_type` after values exist
 8. **Custom module deletion** — deleting a module soft-deletes all its records, forms, and field values
 9. **Lookup cross-module** — lookup fields can reference any module (system or custom); deleting the target module's records shows "Deleted record" in the lookup display
-10. **Display order** — modules sorted by `display_order` in sidebar; forms and fields sorted within their parent
+10. **Display order** — modules sorted by `display_order` in sidebar; sections sorted within form; fields sorted within section
 11. **Icon safety** — module icon validated against a known set of lucide icon names
 12. **Record title** — every custom module record has a required `title` field as the primary display value; additional data captured via custom form fields
+13. **Section ordering** — sections sorted by `display_order` within a form; fields sorted by `display_order` within a section
+14. **Unsectioned fields** — fields with `section_id = NULL` render in an implicit "General" group at top (backward compatible)
+15. **Section deletion** — deleting a section sets `section_id = NULL` on its fields (moves to unsectioned) — fields are NOT deleted
+16. **Default section** — creating a new form auto-creates a "General" section
