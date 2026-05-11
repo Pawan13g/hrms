@@ -1,0 +1,26 @@
+type Designation {
+  id: ID!
+  tenantId: ID!
+  name: String!
+  code: String
+  level: Int
+  description: String
+  status: String!
+}
+
+
+input CreateDesignation {
+  name: String!
+  code: String
+  level: Int
+  description: String
+}
+
+
+extend type Query {
+  designations(tenantId: ID!): [Designation!]!
+}
+
+extend type Mutation {
+  createDesignation(input: CreateDesignation!): Designation!
+}

@@ -1,0 +1,22 @@
+type Department {
+  id: ID!
+  tenantId: ID!
+  name: String!
+  code: String
+  description: String
+  status: String!
+}
+
+input CreateDepartment {
+  name: String!
+  code: String
+  description: String
+}
+
+extend type Query {
+  departments: [Department!]! 
+}
+
+extend type Mutation {
+  createDepartment(input: CreateDepartment!): Department!
+}

@@ -1,0 +1,11 @@
+"""
+@hasPermission gates a field on the principal having the named permission key.
+The directive resolver consults the request-scoped Principal placed in ctx by
+auth middleware and aborts with a forbidden error otherwise.
+"""
+directive @hasPermission(key: String!) on FIELD_DEFINITION
+
+"""
+@auth requires the request to carry a valid bearer token (any principal).
+"""
+directive @auth on FIELD_DEFINITION

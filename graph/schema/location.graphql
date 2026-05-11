@@ -1,0 +1,34 @@
+type Location {
+  id: ID!
+  tenantId: ID!
+  name: String!
+  code: String
+  address: String
+  postalCode: String
+  phone: String
+  email: String
+  timezone: String
+  isHeadquarters: Boolean!
+  status: String!
+}
+
+
+input CreateLocation {
+  tenantId: ID!
+  name: String!
+  code: String
+  address: String
+  postalCode: String
+  phone: String
+  email: String
+  timezone: String
+  isHeadquarters: Boolean
+}
+
+extend type Query {
+  locations(tenantId: ID!): [Location!]!
+}
+
+extend type Mutation {
+  createLocation(input: CreateLocation!): Location!
+}
