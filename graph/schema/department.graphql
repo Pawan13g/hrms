@@ -1,6 +1,6 @@
 type Department {
-  id: ID!
-  tenantId: ID!
+  id: Uint64!
+  tenantId: Uint64!
   name: String!
   code: String
   description: String
@@ -14,7 +14,7 @@ input CreateDepartment {
 }
 
 extend type Query {
-  departments: [Department!]! 
+  getDepartments: [Department!]! 
 }
 
 extend type Mutation {

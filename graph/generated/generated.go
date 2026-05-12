@@ -38,6 +38,31 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	City struct {
+		Code    func(childComplexity int) int
+		ID      func(childComplexity int) int
+		Name    func(childComplexity int) int
+		State   func(childComplexity int) int
+		StateID func(childComplexity int) int
+		Status  func(childComplexity int) int
+	}
+
+	Country struct {
+		Code                func(childComplexity int) int
+		CurrencyCode        func(childComplexity int) int
+		CurrencySymbol      func(childComplexity int) int
+		DateFormat          func(childComplexity int) int
+		FiscalYearStart     func(childComplexity int) int
+		ID                  func(childComplexity int) int
+		IsoCode             func(childComplexity int) int
+		Name                func(childComplexity int) int
+		PhoneCode           func(childComplexity int) int
+		States              func(childComplexity int) int
+		Status              func(childComplexity int) int
+		Timezone            func(childComplexity int) int
+		WorkingHoursPerWeek func(childComplexity int) int
+	}
+
 	Department struct {
 		Code        func(childComplexity int) int
 		Description func(childComplexity int) int
@@ -72,27 +97,89 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
+		CreateCity        func(childComplexity int, input model.CreateCityInput) int
+		CreateCountry     func(childComplexity int, input model.CreateCountryInput) int
 		CreateDepartment  func(childComplexity int, input model.CreateDepartment) int
 		CreateDesignation func(childComplexity int, input model.CreateDesignation) int
 		CreateLocation    func(childComplexity int, input model.CreateLocation) int
+		CreateState       func(childComplexity int, input model.CreateStateInput) int
+		CreateTenant      func(childComplexity int, input model.CreateTenantInput) int
 	}
 
 	Query struct {
-		Departments  func(childComplexity int) int
-		Designations func(childComplexity int, tenantID string) int
-		Locations    func(childComplexity int, tenantID string) int
+		Designations         func(childComplexity int, tenantID string) int
+		GetCitiesByCountryID func(childComplexity int, countryID uint64) int
+		GetCitiesByStateID   func(childComplexity int, stateID uint64) int
+		GetCityByID          func(childComplexity int, id uint64) int
+		GetCountries         func(childComplexity int) int
+		GetCountryByID       func(childComplexity int, id uint64) int
+		GetDepartments       func(childComplexity int) int
+		GetStateByCityID     func(childComplexity int, cityID uint64) int
+		GetStateByID         func(childComplexity int, id uint64) int
+		GetStatesByCountryID func(childComplexity int, countryID uint64) int
+		GetTenantByID        func(childComplexity int, tenantID string) int
+		GetTenents           func(childComplexity int) int
+		Locations            func(childComplexity int, tenantID string) int
+	}
+
+	State struct {
+		Cities    func(childComplexity int) int
+		Code      func(childComplexity int) int
+		Country   func(childComplexity int) int
+		CountryID func(childComplexity int) int
+		ID        func(childComplexity int) int
+		Name      func(childComplexity int) int
+		Status    func(childComplexity int) int
+	}
+
+	Tenant struct {
+		Address            func(childComplexity int) int
+		CityID             func(childComplexity int) int
+		Code               func(childComplexity int) int
+		CountryID          func(childComplexity int) int
+		CreatedAt          func(childComplexity int) int
+		DateFormat         func(childComplexity int) int
+		Email              func(childComplexity int) int
+		FiscalYearStart    func(childComplexity int) int
+		ID                 func(childComplexity int) int
+		LegalName          func(childComplexity int) int
+		LogoURL            func(childComplexity int) int
+		Name               func(childComplexity int) int
+		Phone              func(childComplexity int) int
+		PrimaryCurrency    func(childComplexity int) int
+		RegistrationNumber func(childComplexity int) int
+		Settings           func(childComplexity int) int
+		Status             func(childComplexity int) int
+		TaxID              func(childComplexity int) int
+		Timezone           func(childComplexity int) int
+		UpdatedAt          func(childComplexity int) int
+		Website            func(childComplexity int) int
 	}
 }
 
 type MutationResolver interface {
+	CreateCountry(ctx context.Context, input model.CreateCountryInput) (*model.Country, error)
+	CreateState(ctx context.Context, input model.CreateStateInput) (*model.State, error)
+	CreateCity(ctx context.Context, input model.CreateCityInput) (*model.City, error)
 	CreateDepartment(ctx context.Context, input model.CreateDepartment) (*model.Department, error)
 	CreateDesignation(ctx context.Context, input model.CreateDesignation) (*model.Designation, error)
 	CreateLocation(ctx context.Context, input model.CreateLocation) (*model.Location, error)
+	CreateTenant(ctx context.Context, input model.CreateTenantInput) (*model.Tenant, error)
 }
 type QueryResolver interface {
-	Departments(ctx context.Context) ([]*model.Department, error)
+	GetCountryByID(ctx context.Context, id uint64) (*model.Country, error)
+	GetCountries(ctx context.Context) ([]*model.Country, error)
+	GetStateByID(ctx context.Context, id uint64) (*model.State, error)
+	GetStatesByCountryID(ctx context.Context, countryID uint64) ([]*model.State, error)
+	GetStateByCityID(ctx context.Context, cityID uint64) (*model.State, error)
+	GetCityByID(ctx context.Context, id uint64) (*model.City, error)
+	GetCitiesByStateID(ctx context.Context, stateID uint64) ([]*model.City, error)
+	GetCitiesByCountryID(ctx context.Context, countryID uint64) ([]*model.City, error)
+	GetDepartments(ctx context.Context) ([]*model.Department, error)
 	Designations(ctx context.Context, tenantID string) ([]*model.Designation, error)
 	Locations(ctx context.Context, tenantID string) ([]*model.Location, error)
+	GetTenantByID(ctx context.Context, tenantID string) ([]*model.Tenant, error)
+	GetTenents(ctx context.Context) ([]*model.Tenant, error)
 }
 
 type executableSchema graphql.ExecutableSchemaState[ResolverRoot, DirectiveRoot, ComplexityRoot]
@@ -108,6 +195,122 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 	ec := newExecutionContext(nil, e, nil)
 	_ = ec
 	switch typeName + "." + field {
+
+	case "City.code":
+		if e.ComplexityRoot.City.Code == nil {
+			break
+		}
+
+		return e.ComplexityRoot.City.Code(childComplexity), true
+	case "City.id":
+		if e.ComplexityRoot.City.ID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.City.ID(childComplexity), true
+	case "City.name":
+		if e.ComplexityRoot.City.Name == nil {
+			break
+		}
+
+		return e.ComplexityRoot.City.Name(childComplexity), true
+	case "City.state":
+		if e.ComplexityRoot.City.State == nil {
+			break
+		}
+
+		return e.ComplexityRoot.City.State(childComplexity), true
+	case "City.stateId":
+		if e.ComplexityRoot.City.StateID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.City.StateID(childComplexity), true
+	case "City.status":
+		if e.ComplexityRoot.City.Status == nil {
+			break
+		}
+
+		return e.ComplexityRoot.City.Status(childComplexity), true
+
+	case "Country.code":
+		if e.ComplexityRoot.Country.Code == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Country.Code(childComplexity), true
+	case "Country.currencyCode":
+		if e.ComplexityRoot.Country.CurrencyCode == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Country.CurrencyCode(childComplexity), true
+	case "Country.currencySymbol":
+		if e.ComplexityRoot.Country.CurrencySymbol == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Country.CurrencySymbol(childComplexity), true
+	case "Country.dateFormat":
+		if e.ComplexityRoot.Country.DateFormat == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Country.DateFormat(childComplexity), true
+	case "Country.fiscalYearStart":
+		if e.ComplexityRoot.Country.FiscalYearStart == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Country.FiscalYearStart(childComplexity), true
+	case "Country.id":
+		if e.ComplexityRoot.Country.ID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Country.ID(childComplexity), true
+	case "Country.isoCode":
+		if e.ComplexityRoot.Country.IsoCode == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Country.IsoCode(childComplexity), true
+	case "Country.name":
+		if e.ComplexityRoot.Country.Name == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Country.Name(childComplexity), true
+	case "Country.phoneCode":
+		if e.ComplexityRoot.Country.PhoneCode == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Country.PhoneCode(childComplexity), true
+	case "Country.states":
+		if e.ComplexityRoot.Country.States == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Country.States(childComplexity), true
+	case "Country.status":
+		if e.ComplexityRoot.Country.Status == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Country.Status(childComplexity), true
+	case "Country.timezone":
+		if e.ComplexityRoot.Country.Timezone == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Country.Timezone(childComplexity), true
+	case "Country.workingHoursPerWeek":
+		if e.ComplexityRoot.Country.WorkingHoursPerWeek == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Country.WorkingHoursPerWeek(childComplexity), true
 
 	case "Department.code":
 		if e.ComplexityRoot.Department.Code == nil {
@@ -256,6 +459,28 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.Location.Timezone(childComplexity), true
 
+	case "Mutation.createCity":
+		if e.ComplexityRoot.Mutation.CreateCity == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createCity_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.CreateCity(childComplexity, args["input"].(model.CreateCityInput)), true
+	case "Mutation.createCountry":
+		if e.ComplexityRoot.Mutation.CreateCountry == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createCountry_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.CreateCountry(childComplexity, args["input"].(model.CreateCountryInput)), true
 	case "Mutation.createDepartment":
 		if e.ComplexityRoot.Mutation.CreateDepartment == nil {
 			break
@@ -289,13 +514,29 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.CreateLocation(childComplexity, args["input"].(model.CreateLocation)), true
-
-	case "Query.departments":
-		if e.ComplexityRoot.Query.Departments == nil {
+	case "Mutation.createState":
+		if e.ComplexityRoot.Mutation.CreateState == nil {
 			break
 		}
 
-		return e.ComplexityRoot.Query.Departments(childComplexity), true
+		args, err := ec.field_Mutation_createState_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.CreateState(childComplexity, args["input"].(model.CreateStateInput)), true
+	case "Mutation.createTenant":
+		if e.ComplexityRoot.Mutation.CreateTenant == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createTenant_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.CreateTenant(childComplexity, args["input"].(model.CreateTenantInput)), true
+
 	case "Query.designations":
 		if e.ComplexityRoot.Query.Designations == nil {
 			break
@@ -307,6 +548,112 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Query.Designations(childComplexity, args["tenantId"].(string)), true
+	case "Query.getCitiesByCountryId":
+		if e.ComplexityRoot.Query.GetCitiesByCountryID == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getCitiesByCountryId_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.GetCitiesByCountryID(childComplexity, args["countryId"].(uint64)), true
+	case "Query.getCitiesByStateId":
+		if e.ComplexityRoot.Query.GetCitiesByStateID == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getCitiesByStateId_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.GetCitiesByStateID(childComplexity, args["stateId"].(uint64)), true
+	case "Query.getCityById":
+		if e.ComplexityRoot.Query.GetCityByID == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getCityById_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.GetCityByID(childComplexity, args["id"].(uint64)), true
+	case "Query.getCountries":
+		if e.ComplexityRoot.Query.GetCountries == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Query.GetCountries(childComplexity), true
+	case "Query.getCountryById":
+		if e.ComplexityRoot.Query.GetCountryByID == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getCountryById_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.GetCountryByID(childComplexity, args["id"].(uint64)), true
+	case "Query.getDepartments":
+		if e.ComplexityRoot.Query.GetDepartments == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Query.GetDepartments(childComplexity), true
+	case "Query.getStateByCityId":
+		if e.ComplexityRoot.Query.GetStateByCityID == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getStateByCityId_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.GetStateByCityID(childComplexity, args["cityId"].(uint64)), true
+	case "Query.getStateById":
+		if e.ComplexityRoot.Query.GetStateByID == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getStateById_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.GetStateByID(childComplexity, args["id"].(uint64)), true
+	case "Query.getStatesByCountryId":
+		if e.ComplexityRoot.Query.GetStatesByCountryID == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getStatesByCountryId_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.GetStatesByCountryID(childComplexity, args["countryId"].(uint64)), true
+	case "Query.getTenantById":
+		if e.ComplexityRoot.Query.GetTenantByID == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getTenantById_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.GetTenantByID(childComplexity, args["tenantId"].(string)), true
+	case "Query.getTenents":
+		if e.ComplexityRoot.Query.GetTenents == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Query.GetTenents(childComplexity), true
 
 	case "Query.locations":
 		if e.ComplexityRoot.Query.Locations == nil {
@@ -320,6 +667,176 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.Query.Locations(childComplexity, args["tenantId"].(string)), true
 
+	case "State.cities":
+		if e.ComplexityRoot.State.Cities == nil {
+			break
+		}
+
+		return e.ComplexityRoot.State.Cities(childComplexity), true
+	case "State.code":
+		if e.ComplexityRoot.State.Code == nil {
+			break
+		}
+
+		return e.ComplexityRoot.State.Code(childComplexity), true
+	case "State.country":
+		if e.ComplexityRoot.State.Country == nil {
+			break
+		}
+
+		return e.ComplexityRoot.State.Country(childComplexity), true
+	case "State.countryId":
+		if e.ComplexityRoot.State.CountryID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.State.CountryID(childComplexity), true
+	case "State.id":
+		if e.ComplexityRoot.State.ID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.State.ID(childComplexity), true
+	case "State.name":
+		if e.ComplexityRoot.State.Name == nil {
+			break
+		}
+
+		return e.ComplexityRoot.State.Name(childComplexity), true
+	case "State.status":
+		if e.ComplexityRoot.State.Status == nil {
+			break
+		}
+
+		return e.ComplexityRoot.State.Status(childComplexity), true
+
+	case "Tenant.address":
+		if e.ComplexityRoot.Tenant.Address == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Tenant.Address(childComplexity), true
+	case "Tenant.cityId":
+		if e.ComplexityRoot.Tenant.CityID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Tenant.CityID(childComplexity), true
+	case "Tenant.code":
+		if e.ComplexityRoot.Tenant.Code == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Tenant.Code(childComplexity), true
+	case "Tenant.countryId":
+		if e.ComplexityRoot.Tenant.CountryID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Tenant.CountryID(childComplexity), true
+	case "Tenant.createdAt":
+		if e.ComplexityRoot.Tenant.CreatedAt == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Tenant.CreatedAt(childComplexity), true
+	case "Tenant.dateFormat":
+		if e.ComplexityRoot.Tenant.DateFormat == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Tenant.DateFormat(childComplexity), true
+	case "Tenant.email":
+		if e.ComplexityRoot.Tenant.Email == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Tenant.Email(childComplexity), true
+	case "Tenant.fiscalYearStart":
+		if e.ComplexityRoot.Tenant.FiscalYearStart == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Tenant.FiscalYearStart(childComplexity), true
+	case "Tenant.id":
+		if e.ComplexityRoot.Tenant.ID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Tenant.ID(childComplexity), true
+	case "Tenant.legalName":
+		if e.ComplexityRoot.Tenant.LegalName == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Tenant.LegalName(childComplexity), true
+	case "Tenant.logoUrl":
+		if e.ComplexityRoot.Tenant.LogoURL == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Tenant.LogoURL(childComplexity), true
+	case "Tenant.name":
+		if e.ComplexityRoot.Tenant.Name == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Tenant.Name(childComplexity), true
+	case "Tenant.phone":
+		if e.ComplexityRoot.Tenant.Phone == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Tenant.Phone(childComplexity), true
+	case "Tenant.primaryCurrency":
+		if e.ComplexityRoot.Tenant.PrimaryCurrency == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Tenant.PrimaryCurrency(childComplexity), true
+	case "Tenant.registrationNumber":
+		if e.ComplexityRoot.Tenant.RegistrationNumber == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Tenant.RegistrationNumber(childComplexity), true
+	case "Tenant.settings":
+		if e.ComplexityRoot.Tenant.Settings == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Tenant.Settings(childComplexity), true
+	case "Tenant.status":
+		if e.ComplexityRoot.Tenant.Status == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Tenant.Status(childComplexity), true
+	case "Tenant.taxId":
+		if e.ComplexityRoot.Tenant.TaxID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Tenant.TaxID(childComplexity), true
+	case "Tenant.timezone":
+		if e.ComplexityRoot.Tenant.Timezone == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Tenant.Timezone(childComplexity), true
+	case "Tenant.updatedAt":
+		if e.ComplexityRoot.Tenant.UpdatedAt == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Tenant.UpdatedAt(childComplexity), true
+	case "Tenant.website":
+		if e.ComplexityRoot.Tenant.Website == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Tenant.Website(childComplexity), true
+
 	}
 	return 0, false
 }
@@ -328,9 +845,13 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	opCtx := graphql.GetOperationContext(ctx)
 	ec := newExecutionContext(opCtx, e, make(chan graphql.DeferredResult))
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
+		ec.unmarshalInputCreateCityInput,
+		ec.unmarshalInputCreateCountryInput,
 		ec.unmarshalInputCreateDepartment,
 		ec.unmarshalInputCreateDesignation,
 		ec.unmarshalInputCreateLocation,
+		ec.unmarshalInputCreateStateInput,
+		ec.unmarshalInputCreateTenantInput,
 	)
 	first := true
 
@@ -407,8 +928,8 @@ func newExecutionContext(
 
 var sources = []*ast.Source{
 	{Name: "../schema/department.graphql", Input: `type Department {
-  id: ID!
-  tenantId: ID!
+  id: Uint64!
+  tenantId: Uint64!
   name: String!
   code: String
   description: String
@@ -422,7 +943,7 @@ input CreateDepartment {
 }
 
 extend type Query {
-  departments: [Department!]! 
+  getDepartments: [Department!]! 
 }
 
 extend type Mutation {
@@ -466,6 +987,91 @@ directive @hasPermission(key: String!) on FIELD_DEFINITION
 """
 directive @auth on FIELD_DEFINITION
 `, BuiltIn: false},
+	{Name: "../schema/geography.graphql", Input: `# --- Common Scalars ---
+scalar Uint64
+scalar DateTime
+
+# --- Types ---
+type Country {
+  id: Uint64!
+  code: String!
+  name: String!
+  isoCode: String
+  currencyCode: String!
+  currencySymbol: String
+  phoneCode: String
+  timezone: String
+  dateFormat: String!
+  fiscalYearStart: String!
+  workingHoursPerWeek: Float!
+  status: String!
+  states: [State!]
+}
+
+type State {
+  id: Uint64!
+  countryId: Uint64!
+  country: Country!
+  name: String!
+  code: String
+  status: String!
+  cities: [City!]
+}
+
+type City {
+  id: Uint64!
+  stateId: Uint64!
+  state: State!
+  name: String!
+  code: String
+  status: String!
+}
+
+# --- Inputs ---
+input CreateCountryInput {
+  code: String!
+  name: String!
+  isoCode: String
+  currencyCode: String!
+  currencySymbol: String
+  phoneCode: String
+  timezone: String
+  dateFormat: String = "YYYY-MM-DD"
+  fiscalYearStart: String = "01-01"
+  workingHoursPerWeek: Float = 40.0
+}
+
+input CreateStateInput {
+  countryId: Uint64!
+  name: String!
+  code: String
+}
+
+input CreateCityInput {
+  stateId: Uint64!
+  name: String!
+  code: String
+}
+
+# --- Operations ---
+type Query {
+  getCountryById(id: Uint64!): Country
+  getCountries: [Country!]!
+
+  getStateById(id: Uint64!): State
+  getStatesByCountryId(countryId: Uint64!): [State!]!
+  getStateByCityId(cityId: Uint64!): State
+
+  getCityById(id: Uint64!): City
+  getCitiesByStateId(stateId: Uint64!): [City!]!
+  getCitiesByCountryId(countryId: Uint64!): [City!]!
+}   
+
+type Mutation {
+  createCountry(input: CreateCountryInput!): Country!
+  createState(input: CreateStateInput!): State!
+  createCity(input: CreateCityInput!): City!
+}`, BuiltIn: false},
 	{Name: "../schema/location.graphql", Input: `type Location {
   id: ID!
   tenantId: ID!
@@ -500,12 +1106,127 @@ extend type Query {
 extend type Mutation {
   createLocation(input: CreateLocation!): Location!
 }`, BuiltIn: false},
+	{Name: "../schema/tenent.graphql", Input: `scalar JSON
+
+type Tenant {
+  id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  status: String!
+  
+  name: String!
+  code: String!
+  legalName: String
+  registrationNumber: String
+  taxId: String
+  
+  countryId: Int
+  cityId: Int
+  
+  primaryCurrency: String!
+  timezone: String!
+  dateFormat: String!
+  fiscalYearStart: String!
+  logoUrl: String
+  website: String
+  email: String
+  phone: String
+  address: String
+  settings: JSON
+  
+  # Relationships
+#   locations: [Location!]
+#   users: [User!]
+#   employees: [Employee!]
+}
+
+
+input CreateTenantInput {
+  name: String!
+  code: String!
+  legalName: String
+  registrationNumber: String
+  taxId: String
+  
+  countryId: Int
+  cityId: Int
+  
+  primaryCurrency: String = "INR"
+  timezone: String = "UTC"
+  dateFormat: String = "YYYY-MM-DD"
+  fiscalYearStart: String = "01-01"
+  logoUrl: String
+  website: String
+  email: String
+  phone: String
+  address: String
+  settings: JSON = "{}"
+}
+
+extend type Query {
+  getTenantById(tenantId: ID!): [Tenant!]!
+  getTenents: [Tenant!]!
+}
+
+extend type Mutation {
+  createTenant(input: CreateTenantInput!): Tenant!
+}`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
 // childFields_* functions provide shared child field context lookups.
 // Each function is generated once per unique object type, deduplicating the
 // switch statements that were previously inlined in every fieldContext_* function.
+
+func (ec *executionContext) childFields_City(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "id":
+		return ec.fieldContext_City_id(ctx, field)
+	case "stateId":
+		return ec.fieldContext_City_stateId(ctx, field)
+	case "state":
+		return ec.fieldContext_City_state(ctx, field)
+	case "name":
+		return ec.fieldContext_City_name(ctx, field)
+	case "code":
+		return ec.fieldContext_City_code(ctx, field)
+	case "status":
+		return ec.fieldContext_City_status(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type City", field.Name)
+}
+
+func (ec *executionContext) childFields_Country(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "id":
+		return ec.fieldContext_Country_id(ctx, field)
+	case "code":
+		return ec.fieldContext_Country_code(ctx, field)
+	case "name":
+		return ec.fieldContext_Country_name(ctx, field)
+	case "isoCode":
+		return ec.fieldContext_Country_isoCode(ctx, field)
+	case "currencyCode":
+		return ec.fieldContext_Country_currencyCode(ctx, field)
+	case "currencySymbol":
+		return ec.fieldContext_Country_currencySymbol(ctx, field)
+	case "phoneCode":
+		return ec.fieldContext_Country_phoneCode(ctx, field)
+	case "timezone":
+		return ec.fieldContext_Country_timezone(ctx, field)
+	case "dateFormat":
+		return ec.fieldContext_Country_dateFormat(ctx, field)
+	case "fiscalYearStart":
+		return ec.fieldContext_Country_fiscalYearStart(ctx, field)
+	case "workingHoursPerWeek":
+		return ec.fieldContext_Country_workingHoursPerWeek(ctx, field)
+	case "status":
+		return ec.fieldContext_Country_status(ctx, field)
+	case "states":
+		return ec.fieldContext_Country_states(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type Country", field.Name)
+}
 
 func (ec *executionContext) childFields_Department(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 	switch field.Name {
@@ -571,6 +1292,74 @@ func (ec *executionContext) childFields_Location(ctx context.Context, field grap
 		return ec.fieldContext_Location_status(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type Location", field.Name)
+}
+
+func (ec *executionContext) childFields_State(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "id":
+		return ec.fieldContext_State_id(ctx, field)
+	case "countryId":
+		return ec.fieldContext_State_countryId(ctx, field)
+	case "country":
+		return ec.fieldContext_State_country(ctx, field)
+	case "name":
+		return ec.fieldContext_State_name(ctx, field)
+	case "code":
+		return ec.fieldContext_State_code(ctx, field)
+	case "status":
+		return ec.fieldContext_State_status(ctx, field)
+	case "cities":
+		return ec.fieldContext_State_cities(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type State", field.Name)
+}
+
+func (ec *executionContext) childFields_Tenant(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "id":
+		return ec.fieldContext_Tenant_id(ctx, field)
+	case "createdAt":
+		return ec.fieldContext_Tenant_createdAt(ctx, field)
+	case "updatedAt":
+		return ec.fieldContext_Tenant_updatedAt(ctx, field)
+	case "status":
+		return ec.fieldContext_Tenant_status(ctx, field)
+	case "name":
+		return ec.fieldContext_Tenant_name(ctx, field)
+	case "code":
+		return ec.fieldContext_Tenant_code(ctx, field)
+	case "legalName":
+		return ec.fieldContext_Tenant_legalName(ctx, field)
+	case "registrationNumber":
+		return ec.fieldContext_Tenant_registrationNumber(ctx, field)
+	case "taxId":
+		return ec.fieldContext_Tenant_taxId(ctx, field)
+	case "countryId":
+		return ec.fieldContext_Tenant_countryId(ctx, field)
+	case "cityId":
+		return ec.fieldContext_Tenant_cityId(ctx, field)
+	case "primaryCurrency":
+		return ec.fieldContext_Tenant_primaryCurrency(ctx, field)
+	case "timezone":
+		return ec.fieldContext_Tenant_timezone(ctx, field)
+	case "dateFormat":
+		return ec.fieldContext_Tenant_dateFormat(ctx, field)
+	case "fiscalYearStart":
+		return ec.fieldContext_Tenant_fiscalYearStart(ctx, field)
+	case "logoUrl":
+		return ec.fieldContext_Tenant_logoUrl(ctx, field)
+	case "website":
+		return ec.fieldContext_Tenant_website(ctx, field)
+	case "email":
+		return ec.fieldContext_Tenant_email(ctx, field)
+	case "phone":
+		return ec.fieldContext_Tenant_phone(ctx, field)
+	case "address":
+		return ec.fieldContext_Tenant_address(ctx, field)
+	case "settings":
+		return ec.fieldContext_Tenant_settings(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type Tenant", field.Name)
 }
 
 func (ec *executionContext) childFields___Directive(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
@@ -703,6 +1492,34 @@ func (ec *executionContext) dir_hasPermission_args(ctx context.Context, rawArgs 
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_createCity_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
+		func(ctx context.Context, v any) (model.CreateCityInput, error) {
+			return ec.unmarshalNCreateCityInput2githubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCreateCityInput(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_createCountry_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
+		func(ctx context.Context, v any) (model.CreateCountryInput, error) {
+			return ec.unmarshalNCreateCountryInput2githubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCreateCountryInput(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_createDepartment_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -745,6 +1562,34 @@ func (ec *executionContext) field_Mutation_createLocation_args(ctx context.Conte
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_createState_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
+		func(ctx context.Context, v any) (model.CreateStateInput, error) {
+			return ec.unmarshalNCreateStateInput2githubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCreateStateInput(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_createTenant_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
+		func(ctx context.Context, v any) (model.CreateTenantInput, error) {
+			return ec.unmarshalNCreateTenantInput2githubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCreateTenantInput(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -760,6 +1605,118 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 }
 
 func (ec *executionContext) field_Query_designations_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "tenantId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["tenantId"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_getCitiesByCountryId_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "countryId",
+		func(ctx context.Context, v any) (uint64, error) {
+			return ec.unmarshalNUint642uint64(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["countryId"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_getCitiesByStateId_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "stateId",
+		func(ctx context.Context, v any) (uint64, error) {
+			return ec.unmarshalNUint642uint64(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["stateId"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_getCityById_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id",
+		func(ctx context.Context, v any) (uint64, error) {
+			return ec.unmarshalNUint642uint64(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_getCountryById_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id",
+		func(ctx context.Context, v any) (uint64, error) {
+			return ec.unmarshalNUint642uint64(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_getStateByCityId_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "cityId",
+		func(ctx context.Context, v any) (uint64, error) {
+			return ec.unmarshalNUint642uint64(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["cityId"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_getStateById_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id",
+		func(ctx context.Context, v any) (uint64, error) {
+			return ec.unmarshalNUint642uint64(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_getStatesByCountryId_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "countryId",
+		func(ctx context.Context, v any) (uint64, error) {
+			return ec.unmarshalNUint642uint64(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["countryId"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_getTenantById_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "tenantId",
@@ -851,6 +1808,461 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
+func (ec *executionContext) _City_id(ctx context.Context, field graphql.CollectedField, obj *model.City) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_City_id(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v uint64) graphql.Marshaler {
+			return ec.marshalNUint642uint64(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_City_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("City", field, false, false, errors.New("field of type Uint64 does not have child fields"))
+}
+
+func (ec *executionContext) _City_stateId(ctx context.Context, field graphql.CollectedField, obj *model.City) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_City_stateId(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.StateID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v uint64) graphql.Marshaler {
+			return ec.marshalNUint642uint64(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_City_stateId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("City", field, false, false, errors.New("field of type Uint64 does not have child fields"))
+}
+
+func (ec *executionContext) _City_state(ctx context.Context, field graphql.CollectedField, obj *model.City) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_City_state(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.State, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.State) graphql.Marshaler {
+			return ec.marshalNState2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐState(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_City_state(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "City",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_State(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _City_name(ctx context.Context, field graphql.CollectedField, obj *model.City) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_City_name(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Name, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_City_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("City", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _City_code(ctx context.Context, field graphql.CollectedField, obj *model.City) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_City_code(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Code, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_City_code(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("City", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _City_status(ctx context.Context, field graphql.CollectedField, obj *model.City) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_City_status(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Status, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_City_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("City", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Country_id(ctx context.Context, field graphql.CollectedField, obj *model.Country) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Country_id(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v uint64) graphql.Marshaler {
+			return ec.marshalNUint642uint64(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Country_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Country", field, false, false, errors.New("field of type Uint64 does not have child fields"))
+}
+
+func (ec *executionContext) _Country_code(ctx context.Context, field graphql.CollectedField, obj *model.Country) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Country_code(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Code, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Country_code(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Country", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Country_name(ctx context.Context, field graphql.CollectedField, obj *model.Country) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Country_name(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Name, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Country_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Country", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Country_isoCode(ctx context.Context, field graphql.CollectedField, obj *model.Country) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Country_isoCode(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.IsoCode, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Country_isoCode(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Country", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Country_currencyCode(ctx context.Context, field graphql.CollectedField, obj *model.Country) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Country_currencyCode(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CurrencyCode, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Country_currencyCode(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Country", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Country_currencySymbol(ctx context.Context, field graphql.CollectedField, obj *model.Country) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Country_currencySymbol(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CurrencySymbol, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Country_currencySymbol(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Country", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Country_phoneCode(ctx context.Context, field graphql.CollectedField, obj *model.Country) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Country_phoneCode(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.PhoneCode, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Country_phoneCode(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Country", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Country_timezone(ctx context.Context, field graphql.CollectedField, obj *model.Country) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Country_timezone(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Timezone, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Country_timezone(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Country", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Country_dateFormat(ctx context.Context, field graphql.CollectedField, obj *model.Country) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Country_dateFormat(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.DateFormat, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Country_dateFormat(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Country", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Country_fiscalYearStart(ctx context.Context, field graphql.CollectedField, obj *model.Country) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Country_fiscalYearStart(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.FiscalYearStart, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Country_fiscalYearStart(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Country", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Country_workingHoursPerWeek(ctx context.Context, field graphql.CollectedField, obj *model.Country) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Country_workingHoursPerWeek(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.WorkingHoursPerWeek, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v float64) graphql.Marshaler {
+			return ec.marshalNFloat2float64(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Country_workingHoursPerWeek(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Country", field, false, false, errors.New("field of type Float does not have child fields"))
+}
+
+func (ec *executionContext) _Country_status(ctx context.Context, field graphql.CollectedField, obj *model.Country) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Country_status(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Status, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Country_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Country", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Country_states(ctx context.Context, field graphql.CollectedField, obj *model.Country) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Country_states(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.States, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.State) graphql.Marshaler {
+			return ec.marshalOState2ᚕᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐStateᚄ(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Country_states(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Country",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_State(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Department_id(ctx context.Context, field graphql.CollectedField, obj *model.Department) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -863,15 +2275,15 @@ func (ec *executionContext) _Department_id(ctx context.Context, field graphql.Co
 			return obj.ID, nil
 		},
 		nil,
-		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
-			return ec.marshalNID2string(ctx, selections, v)
+		func(ctx context.Context, selections ast.SelectionSet, v uint64) graphql.Marshaler {
+			return ec.marshalNUint642uint64(ctx, selections, v)
 		},
 		true,
 		true,
 	)
 }
 func (ec *executionContext) fieldContext_Department_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	return graphql.NewScalarFieldContext("Department", field, false, false, errors.New("field of type ID does not have child fields"))
+	return graphql.NewScalarFieldContext("Department", field, false, false, errors.New("field of type Uint64 does not have child fields"))
 }
 
 func (ec *executionContext) _Department_tenantId(ctx context.Context, field graphql.CollectedField, obj *model.Department) (ret graphql.Marshaler) {
@@ -886,15 +2298,15 @@ func (ec *executionContext) _Department_tenantId(ctx context.Context, field grap
 			return obj.TenantID, nil
 		},
 		nil,
-		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
-			return ec.marshalNID2string(ctx, selections, v)
+		func(ctx context.Context, selections ast.SelectionSet, v uint64) graphql.Marshaler {
+			return ec.marshalNUint642uint64(ctx, selections, v)
 		},
 		true,
 		true,
 	)
 }
 func (ec *executionContext) fieldContext_Department_tenantId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	return graphql.NewScalarFieldContext("Department", field, false, false, errors.New("field of type ID does not have child fields"))
+	return graphql.NewScalarFieldContext("Department", field, false, false, errors.New("field of type Uint64 does not have child fields"))
 }
 
 func (ec *executionContext) _Department_name(ctx context.Context, field graphql.CollectedField, obj *model.Department) (ret graphql.Marshaler) {
@@ -1403,6 +2815,138 @@ func (ec *executionContext) fieldContext_Location_status(_ context.Context, fiel
 	return graphql.NewScalarFieldContext("Location", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
+func (ec *executionContext) _Mutation_createCountry(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_createCountry(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().CreateCountry(ctx, fc.Args["input"].(model.CreateCountryInput))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Country) graphql.Marshaler {
+			return ec.marshalNCountry2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCountry(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_createCountry(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Country(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createCountry_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_createState(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_createState(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().CreateState(ctx, fc.Args["input"].(model.CreateStateInput))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.State) graphql.Marshaler {
+			return ec.marshalNState2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐState(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_createState(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_State(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createState_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_createCity(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_createCity(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().CreateCity(ctx, fc.Args["input"].(model.CreateCityInput))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.City) graphql.Marshaler {
+			return ec.marshalNCity2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCity(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_createCity(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_City(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createCity_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_createDepartment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -1535,16 +3079,400 @@ func (ec *executionContext) fieldContext_Mutation_createLocation(ctx context.Con
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_departments(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Mutation_createTenant(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
 		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return ec.fieldContext_Query_departments(ctx, field)
+			return ec.fieldContext_Mutation_createTenant(ctx, field)
 		},
 		func(ctx context.Context) (any, error) {
-			return ec.Resolvers.Query().Departments(ctx)
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().CreateTenant(ctx, fc.Args["input"].(model.CreateTenantInput))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Tenant) graphql.Marshaler {
+			return ec.marshalNTenant2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐTenant(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_createTenant(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Tenant(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createTenant_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_getCountryById(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_getCountryById(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().GetCountryByID(ctx, fc.Args["id"].(uint64))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Country) graphql.Marshaler {
+			return ec.marshalOCountry2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCountry(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Query_getCountryById(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Country(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_getCountryById_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_getCountries(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_getCountries(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return ec.Resolvers.Query().GetCountries(ctx)
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.Country) graphql.Marshaler {
+			return ec.marshalNCountry2ᚕᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCountryᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_getCountries(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Country(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_getStateById(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_getStateById(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().GetStateByID(ctx, fc.Args["id"].(uint64))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.State) graphql.Marshaler {
+			return ec.marshalOState2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐState(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Query_getStateById(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_State(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_getStateById_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_getStatesByCountryId(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_getStatesByCountryId(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().GetStatesByCountryID(ctx, fc.Args["countryId"].(uint64))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.State) graphql.Marshaler {
+			return ec.marshalNState2ᚕᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐStateᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_getStatesByCountryId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_State(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_getStatesByCountryId_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_getStateByCityId(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_getStateByCityId(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().GetStateByCityID(ctx, fc.Args["cityId"].(uint64))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.State) graphql.Marshaler {
+			return ec.marshalOState2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐState(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Query_getStateByCityId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_State(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_getStateByCityId_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_getCityById(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_getCityById(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().GetCityByID(ctx, fc.Args["id"].(uint64))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.City) graphql.Marshaler {
+			return ec.marshalOCity2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCity(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Query_getCityById(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_City(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_getCityById_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_getCitiesByStateId(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_getCitiesByStateId(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().GetCitiesByStateID(ctx, fc.Args["stateId"].(uint64))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.City) graphql.Marshaler {
+			return ec.marshalNCity2ᚕᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCityᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_getCitiesByStateId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_City(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_getCitiesByStateId_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_getCitiesByCountryId(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_getCitiesByCountryId(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().GetCitiesByCountryID(ctx, fc.Args["countryId"].(uint64))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.City) graphql.Marshaler {
+			return ec.marshalNCity2ᚕᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCityᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_getCitiesByCountryId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_City(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_getCitiesByCountryId_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_getDepartments(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_getDepartments(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return ec.Resolvers.Query().GetDepartments(ctx)
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.Department) graphql.Marshaler {
@@ -1554,7 +3482,7 @@ func (ec *executionContext) _Query_departments(ctx context.Context, field graphq
 		true,
 	)
 }
-func (ec *executionContext) fieldContext_Query_departments(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_getDepartments(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -1655,6 +3583,82 @@ func (ec *executionContext) fieldContext_Query_locations(ctx context.Context, fi
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_getTenantById(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_getTenantById(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().GetTenantByID(ctx, fc.Args["tenantId"].(string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.Tenant) graphql.Marshaler {
+			return ec.marshalNTenant2ᚕᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐTenantᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_getTenantById(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Tenant(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_getTenantById_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_getTenents(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_getTenents(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return ec.Resolvers.Query().GetTenents(ctx)
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.Tenant) graphql.Marshaler {
+			return ec.marshalNTenant2ᚕᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐTenantᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_getTenents(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Tenant(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -1729,6 +3733,668 @@ func (ec *executionContext) fieldContext_Query___schema(_ context.Context, field
 		},
 	}
 	return fc, nil
+}
+
+func (ec *executionContext) _State_id(ctx context.Context, field graphql.CollectedField, obj *model.State) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_State_id(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v uint64) graphql.Marshaler {
+			return ec.marshalNUint642uint64(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_State_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("State", field, false, false, errors.New("field of type Uint64 does not have child fields"))
+}
+
+func (ec *executionContext) _State_countryId(ctx context.Context, field graphql.CollectedField, obj *model.State) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_State_countryId(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CountryID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v uint64) graphql.Marshaler {
+			return ec.marshalNUint642uint64(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_State_countryId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("State", field, false, false, errors.New("field of type Uint64 does not have child fields"))
+}
+
+func (ec *executionContext) _State_country(ctx context.Context, field graphql.CollectedField, obj *model.State) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_State_country(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Country, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Country) graphql.Marshaler {
+			return ec.marshalNCountry2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCountry(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_State_country(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "State",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Country(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _State_name(ctx context.Context, field graphql.CollectedField, obj *model.State) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_State_name(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Name, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_State_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("State", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _State_code(ctx context.Context, field graphql.CollectedField, obj *model.State) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_State_code(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Code, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_State_code(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("State", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _State_status(ctx context.Context, field graphql.CollectedField, obj *model.State) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_State_status(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Status, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_State_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("State", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _State_cities(ctx context.Context, field graphql.CollectedField, obj *model.State) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_State_cities(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Cities, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.City) graphql.Marshaler {
+			return ec.marshalOCity2ᚕᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCityᚄ(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_State_cities(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "State",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_City(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Tenant_id(ctx context.Context, field graphql.CollectedField, obj *model.Tenant) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Tenant_id(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNID2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Tenant_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Tenant", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _Tenant_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Tenant) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Tenant_createdAt(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedAt, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNDateTime2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Tenant_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Tenant", field, false, false, errors.New("field of type DateTime does not have child fields"))
+}
+
+func (ec *executionContext) _Tenant_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.Tenant) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Tenant_updatedAt(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.UpdatedAt, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNDateTime2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Tenant_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Tenant", field, false, false, errors.New("field of type DateTime does not have child fields"))
+}
+
+func (ec *executionContext) _Tenant_status(ctx context.Context, field graphql.CollectedField, obj *model.Tenant) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Tenant_status(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Status, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Tenant_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Tenant", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Tenant_name(ctx context.Context, field graphql.CollectedField, obj *model.Tenant) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Tenant_name(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Name, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Tenant_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Tenant", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Tenant_code(ctx context.Context, field graphql.CollectedField, obj *model.Tenant) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Tenant_code(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Code, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Tenant_code(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Tenant", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Tenant_legalName(ctx context.Context, field graphql.CollectedField, obj *model.Tenant) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Tenant_legalName(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.LegalName, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Tenant_legalName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Tenant", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Tenant_registrationNumber(ctx context.Context, field graphql.CollectedField, obj *model.Tenant) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Tenant_registrationNumber(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.RegistrationNumber, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Tenant_registrationNumber(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Tenant", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Tenant_taxId(ctx context.Context, field graphql.CollectedField, obj *model.Tenant) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Tenant_taxId(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.TaxID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Tenant_taxId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Tenant", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Tenant_countryId(ctx context.Context, field graphql.CollectedField, obj *model.Tenant) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Tenant_countryId(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CountryID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *int32) graphql.Marshaler {
+			return ec.marshalOInt2ᚖint32(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Tenant_countryId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Tenant", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _Tenant_cityId(ctx context.Context, field graphql.CollectedField, obj *model.Tenant) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Tenant_cityId(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CityID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *int32) graphql.Marshaler {
+			return ec.marshalOInt2ᚖint32(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Tenant_cityId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Tenant", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _Tenant_primaryCurrency(ctx context.Context, field graphql.CollectedField, obj *model.Tenant) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Tenant_primaryCurrency(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.PrimaryCurrency, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Tenant_primaryCurrency(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Tenant", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Tenant_timezone(ctx context.Context, field graphql.CollectedField, obj *model.Tenant) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Tenant_timezone(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Timezone, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Tenant_timezone(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Tenant", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Tenant_dateFormat(ctx context.Context, field graphql.CollectedField, obj *model.Tenant) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Tenant_dateFormat(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.DateFormat, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Tenant_dateFormat(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Tenant", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Tenant_fiscalYearStart(ctx context.Context, field graphql.CollectedField, obj *model.Tenant) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Tenant_fiscalYearStart(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.FiscalYearStart, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Tenant_fiscalYearStart(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Tenant", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Tenant_logoUrl(ctx context.Context, field graphql.CollectedField, obj *model.Tenant) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Tenant_logoUrl(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.LogoURL, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Tenant_logoUrl(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Tenant", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Tenant_website(ctx context.Context, field graphql.CollectedField, obj *model.Tenant) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Tenant_website(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Website, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Tenant_website(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Tenant", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Tenant_email(ctx context.Context, field graphql.CollectedField, obj *model.Tenant) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Tenant_email(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Email, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Tenant_email(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Tenant", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Tenant_phone(ctx context.Context, field graphql.CollectedField, obj *model.Tenant) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Tenant_phone(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Phone, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Tenant_phone(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Tenant", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Tenant_address(ctx context.Context, field graphql.CollectedField, obj *model.Tenant) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Tenant_address(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Address, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Tenant_address(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Tenant", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Tenant_settings(ctx context.Context, field graphql.CollectedField, obj *model.Tenant) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Tenant_settings(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Settings, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOJSON2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Tenant_settings(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Tenant", field, false, false, errors.New("field of type JSON does not have child fields"))
 }
 
 func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
@@ -2790,6 +5456,153 @@ func (ec *executionContext) fieldContext___Type_isOneOf(_ context.Context, field
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputCreateCityInput(ctx context.Context, obj any) (model.CreateCityInput, error) {
+	var it model.CreateCityInput
+	if obj == nil {
+		return it, nil
+	}
+
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"stateId", "name", "code"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "stateId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("stateId"))
+			data, err := ec.unmarshalNUint642uint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StateID = data
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "code":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("code"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Code = data
+		}
+	}
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputCreateCountryInput(ctx context.Context, obj any) (model.CreateCountryInput, error) {
+	var it model.CreateCountryInput
+	if obj == nil {
+		return it, nil
+	}
+
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	if _, present := asMap["dateFormat"]; !present {
+		asMap["dateFormat"] = "YYYY-MM-DD"
+	}
+	if _, present := asMap["fiscalYearStart"]; !present {
+		asMap["fiscalYearStart"] = "01-01"
+	}
+	if _, present := asMap["workingHoursPerWeek"]; !present {
+		asMap["workingHoursPerWeek"] = 40.000000
+	}
+
+	fieldsInOrder := [...]string{"code", "name", "isoCode", "currencyCode", "currencySymbol", "phoneCode", "timezone", "dateFormat", "fiscalYearStart", "workingHoursPerWeek"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "code":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("code"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Code = data
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "isoCode":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isoCode"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IsoCode = data
+		case "currencyCode":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyCode"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyCode = data
+		case "currencySymbol":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencySymbol"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencySymbol = data
+		case "phoneCode":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("phoneCode"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PhoneCode = data
+		case "timezone":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("timezone"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Timezone = data
+		case "dateFormat":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("dateFormat"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DateFormat = data
+		case "fiscalYearStart":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("fiscalYearStart"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FiscalYearStart = data
+		case "workingHoursPerWeek":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("workingHoursPerWeek"))
+			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.WorkingHoursPerWeek = data
+		}
+	}
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputCreateDepartment(ctx context.Context, obj any) (model.CreateDepartment, error) {
 	var it model.CreateDepartment
 	if obj == nil {
@@ -2971,6 +5784,208 @@ func (ec *executionContext) unmarshalInputCreateLocation(ctx context.Context, ob
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputCreateStateInput(ctx context.Context, obj any) (model.CreateStateInput, error) {
+	var it model.CreateStateInput
+	if obj == nil {
+		return it, nil
+	}
+
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"countryId", "name", "code"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "countryId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("countryId"))
+			data, err := ec.unmarshalNUint642uint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CountryID = data
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "code":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("code"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Code = data
+		}
+	}
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputCreateTenantInput(ctx context.Context, obj any) (model.CreateTenantInput, error) {
+	var it model.CreateTenantInput
+	if obj == nil {
+		return it, nil
+	}
+
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	if _, present := asMap["primaryCurrency"]; !present {
+		asMap["primaryCurrency"] = "INR"
+	}
+	if _, present := asMap["timezone"]; !present {
+		asMap["timezone"] = "UTC"
+	}
+	if _, present := asMap["dateFormat"]; !present {
+		asMap["dateFormat"] = "YYYY-MM-DD"
+	}
+	if _, present := asMap["fiscalYearStart"]; !present {
+		asMap["fiscalYearStart"] = "01-01"
+	}
+	if _, present := asMap["settings"]; !present {
+		asMap["settings"] = "{}"
+	}
+
+	fieldsInOrder := [...]string{"name", "code", "legalName", "registrationNumber", "taxId", "countryId", "cityId", "primaryCurrency", "timezone", "dateFormat", "fiscalYearStart", "logoUrl", "website", "email", "phone", "address", "settings"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "code":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("code"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Code = data
+		case "legalName":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("legalName"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LegalName = data
+		case "registrationNumber":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("registrationNumber"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RegistrationNumber = data
+		case "taxId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("taxId"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TaxID = data
+		case "countryId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("countryId"))
+			data, err := ec.unmarshalOInt2ᚖint32(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CountryID = data
+		case "cityId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cityId"))
+			data, err := ec.unmarshalOInt2ᚖint32(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CityID = data
+		case "primaryCurrency":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("primaryCurrency"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PrimaryCurrency = data
+		case "timezone":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("timezone"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Timezone = data
+		case "dateFormat":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("dateFormat"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DateFormat = data
+		case "fiscalYearStart":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("fiscalYearStart"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FiscalYearStart = data
+		case "logoUrl":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("logoUrl"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LogoURL = data
+		case "website":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("website"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Website = data
+		case "email":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Email = data
+		case "phone":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("phone"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Phone = data
+		case "address":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("address"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Address = data
+		case "settings":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("settings"))
+			data, err := ec.unmarshalOJSON2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Settings = data
+		}
+	}
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -2978,6 +5993,151 @@ func (ec *executionContext) unmarshalInputCreateLocation(ctx context.Context, ob
 // endregion ************************** interface.gotpl ***************************
 
 // region    **************************** object.gotpl ****************************
+
+var cityImplementors = []string{"City"}
+
+func (ec *executionContext) _City(ctx context.Context, sel ast.SelectionSet, obj *model.City) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, cityImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("City")
+		case "id":
+			out.Values[i] = ec._City_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "stateId":
+			out.Values[i] = ec._City_stateId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "state":
+			out.Values[i] = ec._City_state(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "name":
+			out.Values[i] = ec._City_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "code":
+			out.Values[i] = ec._City_code(ctx, field, obj)
+		case "status":
+			out.Values[i] = ec._City_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var countryImplementors = []string{"Country"}
+
+func (ec *executionContext) _Country(ctx context.Context, sel ast.SelectionSet, obj *model.Country) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, countryImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Country")
+		case "id":
+			out.Values[i] = ec._Country_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "code":
+			out.Values[i] = ec._Country_code(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "name":
+			out.Values[i] = ec._Country_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "isoCode":
+			out.Values[i] = ec._Country_isoCode(ctx, field, obj)
+		case "currencyCode":
+			out.Values[i] = ec._Country_currencyCode(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "currencySymbol":
+			out.Values[i] = ec._Country_currencySymbol(ctx, field, obj)
+		case "phoneCode":
+			out.Values[i] = ec._Country_phoneCode(ctx, field, obj)
+		case "timezone":
+			out.Values[i] = ec._Country_timezone(ctx, field, obj)
+		case "dateFormat":
+			out.Values[i] = ec._Country_dateFormat(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "fiscalYearStart":
+			out.Values[i] = ec._Country_fiscalYearStart(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "workingHoursPerWeek":
+			out.Values[i] = ec._Country_workingHoursPerWeek(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "status":
+			out.Values[i] = ec._Country_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "states":
+			out.Values[i] = ec._Country_states(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
 
 var departmentImplementors = []string{"Department"}
 
@@ -3187,6 +6347,27 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
+		case "createCountry":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createCountry(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createState":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createState(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createCity":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createCity(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "createDepartment":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createDepartment(ctx, field)
@@ -3204,6 +6385,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "createLocation":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createLocation(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createTenant":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createTenant(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -3250,7 +6438,26 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Query")
-		case "departments":
+		case "getCountryById":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getCountryById(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "getCountries":
 			field := field
 
 			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
@@ -3259,7 +6466,152 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_departments(ctx, field)
+				res = ec._Query_getCountries(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "getStateById":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getStateById(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "getStatesByCountryId":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getStatesByCountryId(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "getStateByCityId":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getStateByCityId(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "getCityById":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getCityById(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "getCitiesByStateId":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getCitiesByStateId(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "getCitiesByCountryId":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getCitiesByCountryId(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "getDepartments":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getDepartments(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -3316,6 +6668,50 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "getTenantById":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getTenantById(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "getTenents":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getTenents(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "__type":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Query___type(ctx, field)
@@ -3324,6 +6720,175 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Query___schema(ctx, field)
 			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var stateImplementors = []string{"State"}
+
+func (ec *executionContext) _State(ctx context.Context, sel ast.SelectionSet, obj *model.State) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, stateImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("State")
+		case "id":
+			out.Values[i] = ec._State_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "countryId":
+			out.Values[i] = ec._State_countryId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "country":
+			out.Values[i] = ec._State_country(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "name":
+			out.Values[i] = ec._State_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "code":
+			out.Values[i] = ec._State_code(ctx, field, obj)
+		case "status":
+			out.Values[i] = ec._State_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "cities":
+			out.Values[i] = ec._State_cities(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var tenantImplementors = []string{"Tenant"}
+
+func (ec *executionContext) _Tenant(ctx context.Context, sel ast.SelectionSet, obj *model.Tenant) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, tenantImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Tenant")
+		case "id":
+			out.Values[i] = ec._Tenant_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createdAt":
+			out.Values[i] = ec._Tenant_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updatedAt":
+			out.Values[i] = ec._Tenant_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "status":
+			out.Values[i] = ec._Tenant_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "name":
+			out.Values[i] = ec._Tenant_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "code":
+			out.Values[i] = ec._Tenant_code(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "legalName":
+			out.Values[i] = ec._Tenant_legalName(ctx, field, obj)
+		case "registrationNumber":
+			out.Values[i] = ec._Tenant_registrationNumber(ctx, field, obj)
+		case "taxId":
+			out.Values[i] = ec._Tenant_taxId(ctx, field, obj)
+		case "countryId":
+			out.Values[i] = ec._Tenant_countryId(ctx, field, obj)
+		case "cityId":
+			out.Values[i] = ec._Tenant_cityId(ctx, field, obj)
+		case "primaryCurrency":
+			out.Values[i] = ec._Tenant_primaryCurrency(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "timezone":
+			out.Values[i] = ec._Tenant_timezone(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "dateFormat":
+			out.Values[i] = ec._Tenant_dateFormat(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "fiscalYearStart":
+			out.Values[i] = ec._Tenant_fiscalYearStart(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "logoUrl":
+			out.Values[i] = ec._Tenant_logoUrl(ctx, field, obj)
+		case "website":
+			out.Values[i] = ec._Tenant_website(ctx, field, obj)
+		case "email":
+			out.Values[i] = ec._Tenant_email(ctx, field, obj)
+		case "phone":
+			out.Values[i] = ec._Tenant_phone(ctx, field, obj)
+		case "address":
+			out.Values[i] = ec._Tenant_address(ctx, field, obj)
+		case "settings":
+			out.Values[i] = ec._Tenant_settings(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3698,6 +7263,76 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
+func (ec *executionContext) marshalNCity2githubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCity(ctx context.Context, sel ast.SelectionSet, v model.City) graphql.Marshaler {
+	return ec._City(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNCity2ᚕᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCityᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.City) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNCity2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCity(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNCity2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCity(ctx context.Context, sel ast.SelectionSet, v *model.City) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._City(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNCountry2githubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCountry(ctx context.Context, sel ast.SelectionSet, v model.Country) graphql.Marshaler {
+	return ec._Country(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNCountry2ᚕᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCountryᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Country) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNCountry2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCountry(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNCountry2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCountry(ctx context.Context, sel ast.SelectionSet, v *model.Country) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Country(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNCreateCityInput2githubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCreateCityInput(ctx context.Context, v any) (model.CreateCityInput, error) {
+	res, err := ec.unmarshalInputCreateCityInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNCreateCountryInput2githubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCreateCountryInput(ctx context.Context, v any) (model.CreateCountryInput, error) {
+	res, err := ec.unmarshalInputCreateCountryInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNCreateDepartment2githubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCreateDepartment(ctx context.Context, v any) (model.CreateDepartment, error) {
 	res, err := ec.unmarshalInputCreateDepartment(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -3711,6 +7346,32 @@ func (ec *executionContext) unmarshalNCreateDesignation2githubᚗcomᚋpawan_13g
 func (ec *executionContext) unmarshalNCreateLocation2githubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCreateLocation(ctx context.Context, v any) (model.CreateLocation, error) {
 	res, err := ec.unmarshalInputCreateLocation(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNCreateStateInput2githubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCreateStateInput(ctx context.Context, v any) (model.CreateStateInput, error) {
+	res, err := ec.unmarshalInputCreateStateInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNCreateTenantInput2githubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCreateTenantInput(ctx context.Context, v any) (model.CreateTenantInput, error) {
+	res, err := ec.unmarshalInputCreateTenantInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNDateTime2string(ctx context.Context, v any) (string, error) {
+	res, err := graphql.UnmarshalString(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNDateTime2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
+	_ = sel
+	res := graphql.MarshalString(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
 }
 
 func (ec *executionContext) marshalNDepartment2githubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐDepartment(ctx context.Context, sel ast.SelectionSet, v model.Department) graphql.Marshaler {
@@ -3773,6 +7434,22 @@ func (ec *executionContext) marshalNDesignation2ᚖgithubᚗcomᚋpawan_13gᚋhr
 	return ec._Designation(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNFloat2float64(ctx context.Context, v any) (float64, error) {
+	res, err := graphql.UnmarshalFloatContext(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNFloat2float64(ctx context.Context, sel ast.SelectionSet, v float64) graphql.Marshaler {
+	_ = sel
+	res := graphql.MarshalFloatContext(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return graphql.WrapContextMarshaler(ctx, res)
+}
+
 func (ec *executionContext) unmarshalNID2string(ctx context.Context, v any) (string, error) {
 	res, err := graphql.UnmarshalID(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -3819,6 +7496,36 @@ func (ec *executionContext) marshalNLocation2ᚖgithubᚗcomᚋpawan_13gᚋhrms�
 	return ec._Location(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNState2githubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐState(ctx context.Context, sel ast.SelectionSet, v model.State) graphql.Marshaler {
+	return ec._State(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNState2ᚕᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐStateᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.State) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNState2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐState(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNState2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐState(ctx context.Context, sel ast.SelectionSet, v *model.State) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._State(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v any) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -3827,6 +7534,52 @@ func (ec *executionContext) unmarshalNString2string(ctx context.Context, v any) 
 func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
 	_ = sel
 	res := graphql.MarshalString(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) marshalNTenant2githubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐTenant(ctx context.Context, sel ast.SelectionSet, v model.Tenant) graphql.Marshaler {
+	return ec._Tenant(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNTenant2ᚕᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐTenantᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Tenant) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNTenant2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐTenant(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNTenant2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐTenant(ctx context.Context, sel ast.SelectionSet, v *model.Tenant) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Tenant(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNUint642uint64(ctx context.Context, v any) (uint64, error) {
+	res, err := graphql.UnmarshalUint64(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNUint642uint64(ctx context.Context, sel ast.SelectionSet, v uint64) graphql.Marshaler {
+	_ = sel
+	res := graphql.MarshalUint64(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -4006,6 +7759,56 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
+func (ec *executionContext) marshalOCity2ᚕᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCityᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.City) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNCity2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCity(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalOCity2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCity(ctx context.Context, sel ast.SelectionSet, v *model.City) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._City(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOCountry2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCountry(ctx context.Context, sel ast.SelectionSet, v *model.Country) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Country(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOFloat2ᚖfloat64(ctx context.Context, v any) (*float64, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalFloatContext(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOFloat2ᚖfloat64(ctx context.Context, sel ast.SelectionSet, v *float64) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	_ = sel
+	res := graphql.MarshalFloatContext(*v)
+	return graphql.WrapContextMarshaler(ctx, res)
+}
+
 func (ec *executionContext) unmarshalOInt2ᚖint32(ctx context.Context, v any) (*int32, error) {
 	if v == nil {
 		return nil, nil
@@ -4022,6 +7825,50 @@ func (ec *executionContext) marshalOInt2ᚖint32(ctx context.Context, sel ast.Se
 	_ = ctx
 	res := graphql.MarshalInt32(*v)
 	return res
+}
+
+func (ec *executionContext) unmarshalOJSON2ᚖstring(ctx context.Context, v any) (*string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalString(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOJSON2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	_ = sel
+	_ = ctx
+	res := graphql.MarshalString(*v)
+	return res
+}
+
+func (ec *executionContext) marshalOState2ᚕᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐStateᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.State) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNState2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐState(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalOState2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐState(ctx context.Context, sel ast.SelectionSet, v *model.State) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._State(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v any) (*string, error) {

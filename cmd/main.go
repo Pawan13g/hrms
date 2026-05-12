@@ -45,8 +45,6 @@ func main() {
 		log.Fatal().Err(err).Msg("postgres connect failed")
 	}
 
-	defer pool.Close()
-
 	// if err := rbac.Seed(ctx, pool); err != nil {
 	// 	log.Fatal().Err(err).Msg("rbac seed failed")
 	// }
@@ -61,6 +59,7 @@ func main() {
 	// recorder := audit.NewRecorder(pool)
 
 	r := server.New(server.Deps{Cfg: cfg, PG: pool, Issuer: issuer})
+
 	srv := &http.Server{
 		Addr:              ":" + cfg.Port,
 		Handler:           r,

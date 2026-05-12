@@ -1,0 +1,85 @@
+# --- Common Scalars ---
+scalar Uint64
+scalar DateTime
+
+# --- Types ---
+type Country {
+  id: Uint64!
+  code: String!
+  name: String!
+  isoCode: String
+  currencyCode: String!
+  currencySymbol: String
+  phoneCode: String
+  timezone: String
+  dateFormat: String!
+  fiscalYearStart: String!
+  workingHoursPerWeek: Float!
+  status: String!
+  states: [State!]
+}
+
+type State {
+  id: Uint64!
+  countryId: Uint64!
+  country: Country!
+  name: String!
+  code: String
+  status: String!
+  cities: [City!]
+}
+
+type City {
+  id: Uint64!
+  stateId: Uint64!
+  state: State!
+  name: String!
+  code: String
+  status: String!
+}
+
+# --- Inputs ---
+input CreateCountryInput {
+  code: String!
+  name: String!
+  isoCode: String
+  currencyCode: String!
+  currencySymbol: String
+  phoneCode: String
+  timezone: String
+  dateFormat: String = "YYYY-MM-DD"
+  fiscalYearStart: String = "01-01"
+  workingHoursPerWeek: Float = 40.0
+}
+
+input CreateStateInput {
+  countryId: Uint64!
+  name: String!
+  code: String
+}
+
+input CreateCityInput {
+  stateId: Uint64!
+  name: String!
+  code: String
+}
+
+# --- Operations ---
+type Query {
+  getCountryById(id: Uint64!): Country
+  getCountries: [Country!]!
+
+  getStateById(id: Uint64!): State
+  getStatesByCountryId(countryId: Uint64!): [State!]!
+  getStateByCityId(cityId: Uint64!): State
+
+  getCityById(id: Uint64!): City
+  getCitiesByStateId(stateId: Uint64!): [City!]!
+  getCitiesByCountryId(countryId: Uint64!): [City!]!
+}   
+
+type Mutation {
+  createCountry(input: CreateCountryInput!): Country!
+  createState(input: CreateStateInput!): State!
+  createCity(input: CreateCityInput!): City!
+}

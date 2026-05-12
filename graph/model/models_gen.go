@@ -2,6 +2,50 @@
 
 package model
 
+type City struct {
+	ID      uint64  `json:"id"`
+	StateID uint64  `json:"stateId"`
+	State   *State  `json:"state"`
+	Name    string  `json:"name"`
+	Code    *string `json:"code,omitempty"`
+	Status  string  `json:"status"`
+}
+
+type Country struct {
+	ID                  uint64   `json:"id"`
+	Code                string   `json:"code"`
+	Name                string   `json:"name"`
+	IsoCode             *string  `json:"isoCode,omitempty"`
+	CurrencyCode        string   `json:"currencyCode"`
+	CurrencySymbol      *string  `json:"currencySymbol,omitempty"`
+	PhoneCode           *string  `json:"phoneCode,omitempty"`
+	Timezone            *string  `json:"timezone,omitempty"`
+	DateFormat          string   `json:"dateFormat"`
+	FiscalYearStart     string   `json:"fiscalYearStart"`
+	WorkingHoursPerWeek float64  `json:"workingHoursPerWeek"`
+	Status              string   `json:"status"`
+	States              []*State `json:"states,omitempty"`
+}
+
+type CreateCityInput struct {
+	StateID uint64  `json:"stateId"`
+	Name    string  `json:"name"`
+	Code    *string `json:"code,omitempty"`
+}
+
+type CreateCountryInput struct {
+	Code                string   `json:"code"`
+	Name                string   `json:"name"`
+	IsoCode             *string  `json:"isoCode,omitempty"`
+	CurrencyCode        string   `json:"currencyCode"`
+	CurrencySymbol      *string  `json:"currencySymbol,omitempty"`
+	PhoneCode           *string  `json:"phoneCode,omitempty"`
+	Timezone            *string  `json:"timezone,omitempty"`
+	DateFormat          *string  `json:"dateFormat,omitempty"`
+	FiscalYearStart     *string  `json:"fiscalYearStart,omitempty"`
+	WorkingHoursPerWeek *float64 `json:"workingHoursPerWeek,omitempty"`
+}
+
 type CreateDepartment struct {
 	Name        string  `json:"name"`
 	Code        *string `json:"code,omitempty"`
@@ -27,9 +71,35 @@ type CreateLocation struct {
 	IsHeadquarters *bool   `json:"isHeadquarters,omitempty"`
 }
 
+type CreateStateInput struct {
+	CountryID uint64  `json:"countryId"`
+	Name      string  `json:"name"`
+	Code      *string `json:"code,omitempty"`
+}
+
+type CreateTenantInput struct {
+	Name               string  `json:"name"`
+	Code               string  `json:"code"`
+	LegalName          *string `json:"legalName,omitempty"`
+	RegistrationNumber *string `json:"registrationNumber,omitempty"`
+	TaxID              *string `json:"taxId,omitempty"`
+	CountryID          *int32  `json:"countryId,omitempty"`
+	CityID             *int32  `json:"cityId,omitempty"`
+	PrimaryCurrency    *string `json:"primaryCurrency,omitempty"`
+	Timezone           *string `json:"timezone,omitempty"`
+	DateFormat         *string `json:"dateFormat,omitempty"`
+	FiscalYearStart    *string `json:"fiscalYearStart,omitempty"`
+	LogoURL            *string `json:"logoUrl,omitempty"`
+	Website            *string `json:"website,omitempty"`
+	Email              *string `json:"email,omitempty"`
+	Phone              *string `json:"phone,omitempty"`
+	Address            *string `json:"address,omitempty"`
+	Settings           *string `json:"settings,omitempty"`
+}
+
 type Department struct {
-	ID          string  `json:"id"`
-	TenantID    string  `json:"tenantId"`
+	ID          uint64  `json:"id"`
+	TenantID    uint64  `json:"tenantId"`
 	Name        string  `json:"name"`
 	Code        *string `json:"code,omitempty"`
 	Description *string `json:"description,omitempty"`
@@ -64,4 +134,38 @@ type Mutation struct {
 }
 
 type Query struct {
+}
+
+type State struct {
+	ID        uint64   `json:"id"`
+	CountryID uint64   `json:"countryId"`
+	Country   *Country `json:"country"`
+	Name      string   `json:"name"`
+	Code      *string  `json:"code,omitempty"`
+	Status    string   `json:"status"`
+	Cities    []*City  `json:"cities,omitempty"`
+}
+
+type Tenant struct {
+	ID                 string  `json:"id"`
+	CreatedAt          string  `json:"createdAt"`
+	UpdatedAt          string  `json:"updatedAt"`
+	Status             string  `json:"status"`
+	Name               string  `json:"name"`
+	Code               string  `json:"code"`
+	LegalName          *string `json:"legalName,omitempty"`
+	RegistrationNumber *string `json:"registrationNumber,omitempty"`
+	TaxID              *string `json:"taxId,omitempty"`
+	CountryID          *int32  `json:"countryId,omitempty"`
+	CityID             *int32  `json:"cityId,omitempty"`
+	PrimaryCurrency    string  `json:"primaryCurrency"`
+	Timezone           string  `json:"timezone"`
+	DateFormat         string  `json:"dateFormat"`
+	FiscalYearStart    string  `json:"fiscalYearStart"`
+	LogoURL            *string `json:"logoUrl,omitempty"`
+	Website            *string `json:"website,omitempty"`
+	Email              *string `json:"email,omitempty"`
+	Phone              *string `json:"phone,omitempty"`
+	Address            *string `json:"address,omitempty"`
+	Settings           *string `json:"settings,omitempty"`
 }

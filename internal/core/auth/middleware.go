@@ -59,7 +59,7 @@ func TenantGuard(pool *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		p, ok := FromContext(c.Request.Context())
 		if !ok {
-			c.Next()
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "unauthorized"})
 			return
 		}
 		code := c.GetHeader(HeaderTenantCode)

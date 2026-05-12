@@ -17,6 +17,7 @@ import (
 	"github.com/pawan_13g/hrms/graph/resolver"
 	"github.com/pawan_13g/hrms/internal/core/auth"
 	"github.com/pawan_13g/hrms/internal/modules/masters/department"
+	"github.com/pawan_13g/hrms/internal/modules/masters/geography"
 	"github.com/redis/go-redis/v9"
 	"github.com/rs/zerolog/log"
 	"github.com/vektah/gqlparser/v2/ast"
@@ -40,7 +41,6 @@ func New(d Deps) *gin.Engine {
 	r.Use(ReqLogger())
 	r.Use(cors(d.Cfg.CORSOrigins))
 	r.Use(auth.AuthMiddleware(d.Issuer))
-	r.Use(auth.TenantGuard(d.PG))
 
 	// loginDeps := auth.LoginDeps{
 	// 	PG:       d.PG,
@@ -75,9 +75,9 @@ func New(d Deps) *gin.Engine {
 		c.JSON(http.StatusOK, gin.H{"status": "ready"})
 	})
 
-	res := &resolver.Resolver{DepartmentService: department.New(department.NewRepository(d.PG))}
+	res := &resolver.Resolver{DepartmentService: department.New(department.NewRepository(d.PG)), GeographyService: geography.New(geography.NewRepository(d.PG))}
 	gqlHandler := InitGraphHandler(res, d.PG)
-	r.Any("/graphql", gin.WrapH(gqlHandler))
+	r.Any("/graphql", auth.TenantGuard(d.PG), gin.WrapH(gqlHandler))
 	if d.Cfg.PlaygroundOn {
 		r.GET("/playground", gin.WrapH(Playground("/graphql")))
 	}
@@ -145,5 +145,5 @@ func InitGraphHandler(r *resolver.Resolver, db *gorm.DB) http.Handler {
 }
 
 func Playground(graphqlPath string) http.Handler {
-	return playground.Handler("HRMS GraphQL", graphqlPath)
+	return playground.ApolloSandboxHandler("HRMS GraphQL", graphqlPath)
 }

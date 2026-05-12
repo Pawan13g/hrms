@@ -1,0 +1,65 @@
+scalar JSON
+
+type Tenant {
+  id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  status: String!
+  
+  name: String!
+  code: String!
+  legalName: String
+  registrationNumber: String
+  taxId: String
+  
+  countryId: Int
+  cityId: Int
+  
+  primaryCurrency: String!
+  timezone: String!
+  dateFormat: String!
+  fiscalYearStart: String!
+  logoUrl: String
+  website: String
+  email: String
+  phone: String
+  address: String
+  settings: JSON
+  
+  # Relationships
+#   locations: [Location!]
+#   users: [User!]
+#   employees: [Employee!]
+}
+
+
+input CreateTenantInput {
+  name: String!
+  code: String!
+  legalName: String
+  registrationNumber: String
+  taxId: String
+  
+  countryId: Int
+  cityId: Int
+  
+  primaryCurrency: String = "INR"
+  timezone: String = "UTC"
+  dateFormat: String = "YYYY-MM-DD"
+  fiscalYearStart: String = "01-01"
+  logoUrl: String
+  website: String
+  email: String
+  phone: String
+  address: String
+  settings: JSON = "{}"
+}
+
+extend type Query {
+  getTenantById(tenantId: ID!): [Tenant!]!
+  getTenents: [Tenant!]!
+}
+
+extend type Mutation {
+  createTenant(input: CreateTenantInput!): Tenant!
+}

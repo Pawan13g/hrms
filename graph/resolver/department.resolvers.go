@@ -7,76 +7,17 @@ package resolver
 
 import (
 	"context"
-	"errors"
-	"strconv"
+	"fmt"
 
-	"github.com/pawan_13g/hrms/graph/generated"
 	"github.com/pawan_13g/hrms/graph/model"
-	"github.com/pawan_13g/hrms/internal/core/auth"
-	"github.com/pawan_13g/hrms/models"
 )
 
 // CreateDepartment is the resolver for the createDepartment field.
 func (r *mutationResolver) CreateDepartment(ctx context.Context, input model.CreateDepartment) (*model.Department, error) {
-	p, ok := auth.FromContext(ctx)
-
-	if !ok {
-		return nil, errors.New("unauthenticated")
-	}
-
-	department := &models.Department{
-		TenantID:    uint64(p.TenantID),
-		Name:        input.Name,
-		Code:        input.Code,
-		Description: input.Description,
-	}
-
-	err := r.DepartmentService.Create(*p, department)
-	if err != nil {
-		return nil, err
-	}
-
-	return &model.Department{
-		ID:          strconv.FormatUint(department.ID, 10),
-		TenantID:    strconv.FormatUint(department.TenantID, 10),
-		Name:        department.Name,
-		Code:        department.Code,
-		Description: department.Description,
-	}, nil
+	panic(fmt.Errorf("not implemented: CreateDepartment - createDepartment"))
 }
 
-// Departments is the resolver for the departments field.
-func (r *queryResolver) Departments(ctx context.Context) ([]*model.Department, error) {
-	p, ok := auth.FromContext(ctx)
-	if !ok {
-		return nil, errors.New("unauthenticated")
-	}
-
-	departments, err := r.DepartmentService.GetAll(*p)
-	if err != nil {
-		return nil, err
-	}
-
-	result := make([]*model.Department, 0, len(departments))
-
-	for _, d := range departments {
-		result = append(result, &model.Department{
-			ID:          strconv.FormatUint(d.ID, 10),
-			TenantID:    strconv.FormatUint(d.TenantID, 10),
-			Name:        d.Name,
-			Code:        d.Code,
-			Description: d.Description,
-		})
-	}
-
-	return result, nil
+// GetDepartments is the resolver for the getDepartments field.
+func (r *queryResolver) GetDepartments(ctx context.Context) ([]*model.Department, error) {
+	panic(fmt.Errorf("not implemented: GetDepartments - getDepartments"))
 }
-
-// Mutation returns generated.MutationResolver implementation.
-func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
-
-// Query returns generated.QueryResolver implementation.
-func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
-
-type mutationResolver struct{ *Resolver }
-type queryResolver struct{ *Resolver }
