@@ -1,8 +1,8 @@
 package auth
 
 import (
-	"context"
 	"errors"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -12,12 +12,12 @@ import (
 
 type Service interface {
 	Login(
-		ctx *jwt.Issuer,
+		issuer *jwt.Issuer,
 		input LoginInput,
 	) (*LoginResponse, error)
 
 	RefreshToken(
-		ctx context.Context,
+		issuer *jwt.Issuer,
 		refreshToken string,
 	) (*LoginResponse, error)
 }
@@ -41,7 +41,6 @@ func (s *service) Login(
 ) (*LoginResponse, error) {
 
 	user, err := s.repo.GetUserByEmail(
-		ctx,
 		input.Email,
 	)
 
@@ -69,14 +68,7 @@ func (s *service) Login(
 		return nil, err
 	}
 
-	err = s.refresh.Save(
-		ctx,
-		user.ID,
-		jti,
-		time.Until(pair.RefreshExp),
-	)
-
-	if err != nil {
+	if s.repo.SaveUserSession(user.ID, jti, time.Until(pair.RefreshExp)) != nil {
 		return nil, err
 	}
 
@@ -89,15 +81,40 @@ func (s *service) Login(
 }
 
 func (s *service) RefreshToken(
-	ctx context.Context,
+	issuer *jwt.Issuer,
 	refreshToken string,
 ) (*LoginResponse, error) {
 
-	return &LoginResponse{
-		AccessToken:  "",
-		RefreshToken: "",
-		AccessExp:    time.Now().Add(7 * 24 * time.Hour),
-		RefreshExp:   time.Now().Add(7 * 24 * time.Hour),
-	}, nil
+	claims, err := issuer.Parse(refreshToken)
+	if err != nil {
+		return nil, errors.New("invalid refresh")
+	}
 
+	userID, err := strconv.ParseUint(claims.Subject, 10, 64)
+	if err != nil {
+		return nil, errors.New("invalid refresh")
+	}
+
+	active, err := s.repo.IsUserSessionActive(userID, claims.JTI)
+	if err != nil || !active {
+		return nil, errors.New("refresh revoked")
+	}
+
+	s.repo.RevokeUserSession(userID, claims.JTI)
+
+	jti := uuid.NewString()
+	pair, err := issuer.Issue(userID, jti)
+	if err != nil {
+		return nil, errors.New("token issue failed")
+	}
+	if err := s.repo.SaveUserSession(userID, jti, time.Until(pair.RefreshExp)); err != nil {
+		return nil, errors.New("refresh save failed")
+	}
+
+	return &LoginResponse{
+		AccessToken:  pair.Access,
+		RefreshToken: pair.Refresh,
+		AccessExp:    pair.AccessExp,
+		RefreshExp:   pair.RefreshExp,
+	}, nil
 }

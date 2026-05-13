@@ -3,26 +3,31 @@ package auth
 import (
 	"context"
 	"errors"
+	"fmt"
+	"time"
 
 	"github.com/jackc/pgx/v5"
-	"gorm.io/gorm"
-
 	"github.com/pawan_13g/hrms/models"
+	"github.com/redis/go-redis/v9"
+	"gorm.io/gorm"
 )
 
 type Repository interface {
 	GetUserByEmail(email string) (*models.User, error)
-	GetUserRoles(ctx context.Context, userID uint64) ([]uint64, error)
-	GetPermissionsByRoles(ctx context.Context, tenantID uint64, roleIDs []uint64) ([]string, error)
+	SaveUserSession(userID uint64, jti string, ttl time.Duration) error
+	RevokeUserSession(userID uint64, jti string) error
+	IsUserSessionActive(userID uint64, jti string) (bool, error)
 }
 
 type repository struct {
-	db *gorm.DB
+	rds *redis.Client
+	db  *gorm.DB
 }
 
-func NewRepository(db *gorm.DB) Repository {
+func NewRepository(db *gorm.DB, rds *redis.Client) Repository {
 	return &repository{
-		db: db,
+		db:  db,
+		rds: rds,
 	}
 }
 
@@ -77,4 +82,30 @@ func (r *repository) GetPermissionsByRoles(
 		Pluck("p.key", &permissions).Error
 
 	return permissions, err
+}
+
+func (r *repository) SaveUserSession(userID uint64, jti string, ttl time.Duration) error {
+	if jti == "" {
+		return errors.New("refresh: empty jti")
+	}
+	return r.rds.Set(context.Background(), _getUserKey(userID, jti), "1", ttl).Err()
+}
+
+func (r *repository) IsUserSessionActive(userID uint64, jti string) (bool, error) {
+	v, err := r.rds.Get(context.Background(), _getUserKey(userID, jti)).Result()
+	if errors.Is(err, redis.Nil) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	return v == "1", nil
+}
+
+func (r *repository) RevokeUserSession(userID uint64, jti string) error {
+	return r.rds.Del(context.Background(), _getUserKey(userID, jti)).Err()
+}
+
+func _getUserKey(userID uint64, jti string) string {
+	return fmt.Sprintf("user:%d:refresh:%s", userID, jti)
 }

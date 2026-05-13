@@ -15,7 +15,8 @@ import (
 
 	"github.com/pawan_13g/hrms/configs"
 	"github.com/pawan_13g/hrms/internal/core/auth"
-	postgres "github.com/pawan_13g/hrms/internal/core/database"
+	postgres "github.com/pawan_13g/hrms/internal/core/database/postgres"
+	"github.com/pawan_13g/hrms/internal/core/database/redis"
 	"github.com/pawan_13g/hrms/internal/core/logger"
 	"github.com/pawan_13g/hrms/internal/core/server"
 )
@@ -49,16 +50,16 @@ func main() {
 	// 	log.Fatal().Err(err).Msg("rbac seed failed")
 	// }
 
-	// rds, err := rediscli.Connect(ctx, cfg.RedisURL)
-	// if err != nil {
-	// 	log.Fatal().Err(err).Msg("redis connect failed")
-	// }
-	// defer func() { _ = rds.Close() }()
+	rds, err := redis.Connect(ctx, cfg.RedisURL)
+	if err != nil {
+		log.Fatal().Err(err).Msg("redis connect failed")
+	}
+	defer func() { _ = rds.Close() }()
 
 	issuer := auth.NewIssuer(cfg.JWTSecret, cfg.JWTAccessTTL, cfg.JWTRefreshTTL)
 	// recorder := audit.NewRecorder(pool)
 
-	r := server.New(server.Deps{Cfg: cfg, PG: pool, Issuer: issuer})
+	r := server.New(server.Deps{Cfg: cfg, PG: pool, Issuer: issuer, Redis: rds})
 
 	srv := &http.Server{
 		Addr:              ":" + cfg.Port,

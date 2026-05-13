@@ -67,10 +67,10 @@ func New(d Deps) *gin.Engine {
 			return
 		}
 
-		// if err := d.Redis.Ping(ctx).Err(); err != nil {
-		// 	c.JSON(http.StatusServiceUnavailable, gin.H{"redis": err.Error()})
-		// 	return
-		// }
+		if err := d.Redis.Ping(c).Err(); err != nil {
+			c.JSON(http.StatusServiceUnavailable, gin.H{"redis": err.Error()})
+			return
+		}
 
 		c.JSON(http.StatusOK, gin.H{"status": "ready"})
 	})
