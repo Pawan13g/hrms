@@ -22,7 +22,7 @@ input LoginInput {
   password: String!
 }
 
-type Query {
+extend type Query {
   me: AuthUser!
 }
 

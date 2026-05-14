@@ -8,20 +8,9 @@ package resolver
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/pawan13g/hrms/graph/model"
 )
-
-// Me is the resolver for the me field.
-func (r *mutationResolver) Me(ctx context.Context) (*model.AuthUser, error) {
-	raw := ctx.Value("authorization").(string)
-	if !strings.HasPrefix(raw, "Bearer ") {
-		return nil, fmt.Errorf("invalid authorization header")
-	}
-
-	return r.AuthService.GetSession(raw[len("Bearer "):])
-}
 
 // Login is the resolver for the login field.
 func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (*model.Login, error) {
@@ -30,4 +19,9 @@ func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (*
 		return nil, err
 	}
 	return session, nil
+}
+
+// Me is the resolver for the me field.
+func (r *queryResolver) Me(ctx context.Context) (*model.AuthUser, error) {
+	panic(fmt.Errorf("not implemented: Me - me"))
 }
