@@ -1,6 +1,6 @@
 package geography
 
-import "github.com/pawan_13g/hrms/models"
+import "github.com/pawan13g/hrms/models"
 
 type Service interface {
 	GetCountries() ([]models.Country, error)

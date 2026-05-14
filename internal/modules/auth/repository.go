@@ -7,13 +7,14 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/pawan_13g/hrms/models"
+	"github.com/pawan13g/hrms/models"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
 
 type Repository interface {
 	GetUserByEmail(email string) (*models.User, error)
+	GetUserByID(userID uint64) (*models.User, error)
 	SaveUserSession(userID uint64, jti string, ttl time.Duration) error
 	RevokeUserSession(userID uint64, jti string) error
 	IsUserSessionActive(userID uint64, jti string) (bool, error)
@@ -39,6 +40,24 @@ func (r *repository) GetUserByEmail(
 
 	err := r.db.
 		Where("email = ?", email).
+		Where("status = ?", "active").
+		First(&user).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, pgx.ErrNoRows
+	}
+
+	return &user, err
+}
+
+func (r *repository) GetUserByID(
+	userID uint64,
+) (*models.User, error) {
+
+	var user models.User
+
+	err := r.db.
+		Where("id = ?", userID).
 		Where("status = ?", "active").
 		First(&user).Error
 

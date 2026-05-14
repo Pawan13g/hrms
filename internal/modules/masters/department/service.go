@@ -1,14 +1,14 @@
 package department
 
 import (
-	"github.com/pawan_13g/hrms/internal/core/auth"
-	"github.com/pawan_13g/hrms/models"
+	"github.com/pawan13g/hrms/graph/model"
+	"github.com/pawan13g/hrms/models"
 )
 
 type Service interface {
-	Create(auth auth.Principal, department *models.Department) error
-	GetAll(auth auth.Principal) ([]*models.Department, error)
-	GetByID(auth auth.Principal, id uint64) (*models.Department, error)
+	Create(auth model.AuthUser, department *models.Department) error
+	GetAll(auth model.AuthUser) ([]*models.Department, error)
+	GetByID(auth model.AuthUser, id uint64) (*models.Department, error)
 }
 
 type service struct {
@@ -22,20 +22,20 @@ func New(
 }
 
 func (s *service) Create(
-	auth auth.Principal,
+	auth model.AuthUser,
 	department *models.Department,
 ) error {
 	return s.repo.Create(department)
 }
 
 func (s *service) GetAll(
-	auth auth.Principal,
+	auth model.AuthUser,
 ) ([]*models.Department, error) {
-	return s.repo.GetAll(uint64(auth.TenantID))
+	return s.repo.GetAll(auth.TenantID)
 }
 
 func (s *service) GetByID(
-	auth auth.Principal, id uint64,
+	auth model.AuthUser, id uint64,
 ) (*models.Department, error) {
-	return s.repo.GetByID(uint64(auth.TenantID), id)
+	return s.repo.GetByID(auth.TenantID, id)
 }

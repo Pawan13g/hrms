@@ -6,12 +6,12 @@ import (
 	"errors"
 	"log"
 
-	"github.com/pawan_13g/hrms/models"
+	"github.com/pawan13g/hrms/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-func Connect(ctx context.Context, dsn string) (*gorm.DB, error) {
+func Connect(dsn string) (*gorm.DB, error) {
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return nil, err

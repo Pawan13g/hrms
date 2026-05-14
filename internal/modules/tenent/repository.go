@@ -1,7 +1,7 @@
 package tenent
 
 import (
-	"github.com/pawan_13g/hrms/models"
+	"github.com/pawan13g/hrms/models"
 	"gorm.io/gorm"
 )
 

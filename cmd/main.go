@@ -13,12 +13,13 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/rs/zerolog/log"
 
-	"github.com/pawan_13g/hrms/configs"
-	"github.com/pawan_13g/hrms/internal/core/auth"
-	postgres "github.com/pawan_13g/hrms/internal/core/database/postgres"
-	"github.com/pawan_13g/hrms/internal/core/database/redis"
-	"github.com/pawan_13g/hrms/internal/core/logger"
-	"github.com/pawan_13g/hrms/internal/core/server"
+	"github.com/pawan13g/hrms/configs"
+	"github.com/pawan13g/hrms/internal/core/container"
+	"github.com/pawan13g/hrms/internal/core/database/postgres"
+	"github.com/pawan13g/hrms/internal/core/database/redis"
+	"github.com/pawan13g/hrms/internal/core/logger"
+	"github.com/pawan13g/hrms/internal/core/server"
+	"github.com/pawan13g/hrms/internal/modules/auth/util/jwt"
 )
 
 func main() {
@@ -40,7 +41,7 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	pool, err := postgres.Connect(ctx, cfg.DatabaseURL)
+	pool, err := postgres.Connect(cfg.DatabaseURL)
 
 	if err != nil {
 		log.Fatal().Err(err).Msg("postgres connect failed")
@@ -56,10 +57,22 @@ func main() {
 	}
 	defer func() { _ = rds.Close() }()
 
-	issuer := auth.NewIssuer(cfg.JWTSecret, cfg.JWTAccessTTL, cfg.JWTRefreshTTL)
+	issuer := jwt.NewIssuer(cfg.JWTSecret, cfg.JWTAccessTTL, cfg.JWTRefreshTTL)
 	// recorder := audit.NewRecorder(pool)
 
-	r := server.New(server.Deps{Cfg: cfg, PG: pool, Issuer: issuer, Redis: rds})
+	container := container.InitContainer(
+		pool,
+		rds,
+		issuer,
+	)
+
+	r := server.New(server.Deps{
+		Cfg:       cfg,
+		PG:        pool,
+		Redis:     rds,
+		Issuer:    issuer,
+		Container: container,
+	})
 
 	srv := &http.Server{
 		Addr:              ":" + cfg.Port,

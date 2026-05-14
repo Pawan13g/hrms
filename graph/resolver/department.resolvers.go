@@ -9,7 +9,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/pawan_13g/hrms/graph/model"
+	"github.com/pawan13g/hrms/graph/model"
 )
 
 // CreateDepartment is the resolver for the createDepartment field.

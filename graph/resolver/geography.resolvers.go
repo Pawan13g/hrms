@@ -3,9 +3,9 @@ package resolver
 import (
 	"context"
 
-	"github.com/pawan_13g/hrms/graph/generated"
-	"github.com/pawan_13g/hrms/graph/model"
-	"github.com/pawan_13g/hrms/models"
+	"github.com/pawan13g/hrms/graph/generated"
+	"github.com/pawan13g/hrms/graph/model"
+	"github.com/pawan13g/hrms/models"
 )
 
 // =====================================

@@ -1,6 +1,6 @@
 package tenent
 
-import "github.com/pawan_13g/hrms/models"
+import "github.com/pawan13g/hrms/models"
 
 type Service interface {
 	Create(tenent *models.Tenant) error

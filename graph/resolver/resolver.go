@@ -1,8 +1,9 @@
 package resolver
 
 import (
-	"github.com/pawan_13g/hrms/internal/modules/masters/department"
-	"github.com/pawan_13g/hrms/internal/modules/masters/geography"
+	"github.com/pawan13g/hrms/internal/modules/auth"
+	"github.com/pawan13g/hrms/internal/modules/masters/department"
+	"github.com/pawan13g/hrms/internal/modules/masters/geography"
 )
 
 // This file will not be regenerated automatically.
@@ -13,4 +14,5 @@ import (
 type Resolver struct {
 	DepartmentService department.Service
 	GeographyService  geography.Service
+	AuthService       auth.Service
 }

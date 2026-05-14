@@ -2,6 +2,16 @@
 
 package model
 
+type AuthUser struct {
+	UserID    uint64  `json:"userId"`
+	TenantID  uint64  `json:"tenantId"`
+	Email     string  `json:"email"`
+	Name      string  `json:"name"`
+	FirstName string  `json:"firstName"`
+	LastName  string  `json:"lastName"`
+	Phone     *string `json:"phone,omitempty"`
+}
+
 type City struct {
 	ID      uint64  `json:"id"`
 	StateID uint64  `json:"stateId"`
@@ -128,6 +138,18 @@ type Location struct {
 	Timezone       *string `json:"timezone,omitempty"`
 	IsHeadquarters bool    `json:"isHeadquarters"`
 	Status         string  `json:"status"`
+}
+
+type Login struct {
+	AccessToken  string `json:"accessToken"`
+	RefreshToken string `json:"refreshToken"`
+	AccessExp    string `json:"accessExp"`
+	RefreshExp   string `json:"refreshExp"`
+}
+
+type LoginInput struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 type Mutation struct {

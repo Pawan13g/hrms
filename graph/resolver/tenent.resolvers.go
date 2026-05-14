@@ -9,7 +9,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/pawan_13g/hrms/graph/model"
+	"github.com/pawan13g/hrms/graph/model"
 )
 
 // CreateTenant is the resolver for the createTenant field.

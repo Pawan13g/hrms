@@ -2,7 +2,6 @@ package server
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
@@ -10,14 +9,13 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
-	"github.com/pawan_13g/hrms/configs"
-	"github.com/pawan_13g/hrms/graph"
-	"github.com/pawan_13g/hrms/graph/generated"
-	"github.com/pawan_13g/hrms/graph/resolver"
-	"github.com/pawan_13g/hrms/internal/core/auth"
-	"github.com/pawan_13g/hrms/internal/modules/masters/department"
-	"github.com/pawan_13g/hrms/internal/modules/masters/geography"
+	"github.com/pawan13g/hrms/configs"
+	"github.com/pawan13g/hrms/graph"
+	"github.com/pawan13g/hrms/graph/generated"
+	"github.com/pawan13g/hrms/graph/resolver"
+	"github.com/pawan13g/hrms/internal/core/container"
+	"github.com/pawan13g/hrms/internal/core/middleware"
+	"github.com/pawan13g/hrms/internal/modules/auth/util/jwt"
 	"github.com/redis/go-redis/v9"
 	"github.com/rs/zerolog/log"
 	"github.com/vektah/gqlparser/v2/ast"
@@ -25,32 +23,18 @@ import (
 )
 
 type Deps struct {
-	Cfg    *configs.Config
-	PG     *gorm.DB
-	Redis  *redis.Client
-	Issuer *auth.Issuer
+	Cfg       *configs.Config
+	PG        *gorm.DB
+	Redis     *redis.Client
+	Issuer    *jwt.Issuer
+	Container *container.Container
 }
 
 func New(d Deps) *gin.Engine {
-	if d.Cfg.Env != "dev" {
-		gin.SetMode(gin.ReleaseMode)
-	}
 	r := gin.New()
-	r.Use(gin.Recovery())
-	r.Use(RequestID())
-	r.Use(ReqLogger())
-	r.Use(cors(d.Cfg.CORSOrigins))
-	r.Use(auth.AuthMiddleware(d.Issuer))
 
-	// loginDeps := auth.LoginDeps{
-	// 	PG:       d.PG,
-	// 	Issuer:   d.Issuer,
-	// 	Refresh:  auth.NewRefreshStore(d.Redis),
-	// 	Resolver: &auth.PgTenantResolver{Pool: d.PG},
-	// }
-	// r.POST("/auth/register", auth.RegisterHandler(loginDeps))
-	// r.POST("/auth/login", auth.LoginHandler(loginDeps))
-	// r.POST("/auth/refresh", auth.RefreshHandler(loginDeps))
+	middleware.RegisterAppMiddleware(r)
+	middleware.RegisterRequestMiddleware(r, d.Cfg)
 
 	r.GET("/healthz", func(c *gin.Context) { c.JSON(http.StatusOK, gin.H{"status": "ok"}) })
 	r.GET("/readyz", func(c *gin.Context) {
@@ -75,56 +59,11 @@ func New(d Deps) *gin.Engine {
 		c.JSON(http.StatusOK, gin.H{"status": "ready"})
 	})
 
-	res := &resolver.Resolver{DepartmentService: department.New(department.NewRepository(d.PG)), GeographyService: geography.New(geography.NewRepository(d.PG))}
-	gqlHandler := InitGraphHandler(res, d.PG)
-	r.Any("/graphql", auth.TenantGuard(d.PG), gin.WrapH(gqlHandler))
-	if d.Cfg.PlaygroundOn {
-		r.GET("/playground", gin.WrapH(Playground("/graphql")))
-	}
+	gqlHandler := InitGraphHandler(&resolver.Resolver{AuthService: d.Container.AuthService}, d.PG)
+	r.Use(d.Container.AuthMiddleware.AuthMiddleware())
+	r.Any("/graphql", gin.WrapH(gqlHandler))
+	r.GET("/playground", gin.WrapH(Playground("/graphql")))
 	return r
-}
-
-func RequestID() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		id := c.GetHeader("X-Request-ID")
-		if id == "" {
-			id = uuid.NewString()
-		}
-		c.Set("request_id", id)
-		c.Header("X-Request-ID", id)
-		c.Next()
-	}
-}
-
-func ReqLogger() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		start := time.Now()
-		c.Next()
-		log.Info().
-			Str("method", c.Request.Method).
-			Str("path", c.Request.URL.Path).
-			Int("status", c.Writer.Status()).
-			Dur("dur", time.Since(start)).
-			Str("rid", c.GetString("request_id")).
-			Msg("http")
-	}
-}
-
-func cors(origins []string) gin.HandlerFunc {
-	allow := "*"
-	if len(origins) == 1 {
-		allow = origins[0]
-	}
-	return func(c *gin.Context) {
-		c.Header("Access-Control-Allow-Origin", allow)
-		c.Header("Access-Control-Allow-Headers", "Authorization, Content-Type, X-Tenant-Code, X-Request-ID")
-		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		if c.Request.Method == http.MethodOptions {
-			c.AbortWithStatus(http.StatusNoContent)
-			return
-		}
-		c.Next()
-	}
 }
 
 func InitGraphHandler(r *resolver.Resolver, db *gorm.DB) http.Handler {

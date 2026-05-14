@@ -1,0 +1,32 @@
+scalar DateTime
+
+type AuthUser {
+  userId: Uint64!
+  tenantId: Uint64!
+  email: String!
+  name: String!
+  firstName: String!
+  lastName: String!
+  phone: String
+}
+
+type Login {
+  accessToken: String!
+  refreshToken: String!
+  accessExp: DateTime!
+  refreshExp: DateTime!
+}
+
+input LoginInput {
+  email: String!
+  password: String!
+}
+
+type Query {
+  me: AuthUser!
+}
+
+extend type Mutation {
+  login(input: LoginInput!): Login!
+}
+

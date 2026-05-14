@@ -1,6 +1,5 @@
 # --- Common Scalars ---
 scalar Uint64
-scalar DateTime
 
 # --- Types ---
 type Country {

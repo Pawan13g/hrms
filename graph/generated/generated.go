@@ -13,7 +13,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
-	"github.com/pawan_13g/hrms/graph/model"
+	"github.com/pawan13g/hrms/graph/model"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -38,6 +38,16 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	AuthUser struct {
+		Email     func(childComplexity int) int
+		FirstName func(childComplexity int) int
+		LastName  func(childComplexity int) int
+		Name      func(childComplexity int) int
+		Phone     func(childComplexity int) int
+		TenantID  func(childComplexity int) int
+		UserID    func(childComplexity int) int
+	}
+
 	City struct {
 		Code    func(childComplexity int) int
 		ID      func(childComplexity int) int
@@ -96,6 +106,13 @@ type ComplexityRoot struct {
 		Timezone       func(childComplexity int) int
 	}
 
+	Login struct {
+		AccessExp    func(childComplexity int) int
+		AccessToken  func(childComplexity int) int
+		RefreshExp   func(childComplexity int) int
+		RefreshToken func(childComplexity int) int
+	}
+
 	Mutation struct {
 		CreateCity        func(childComplexity int, input model.CreateCityInput) int
 		CreateCountry     func(childComplexity int, input model.CreateCountryInput) int
@@ -104,6 +121,8 @@ type ComplexityRoot struct {
 		CreateLocation    func(childComplexity int, input model.CreateLocation) int
 		CreateState       func(childComplexity int, input model.CreateStateInput) int
 		CreateTenant      func(childComplexity int, input model.CreateTenantInput) int
+		Login             func(childComplexity int, input model.LoginInput) int
+		Me                func(childComplexity int) int
 	}
 
 	Query struct {
@@ -161,6 +180,8 @@ type MutationResolver interface {
 	CreateCountry(ctx context.Context, input model.CreateCountryInput) (*model.Country, error)
 	CreateState(ctx context.Context, input model.CreateStateInput) (*model.State, error)
 	CreateCity(ctx context.Context, input model.CreateCityInput) (*model.City, error)
+	Me(ctx context.Context) (*model.AuthUser, error)
+	Login(ctx context.Context, input model.LoginInput) (*model.Login, error)
 	CreateDepartment(ctx context.Context, input model.CreateDepartment) (*model.Department, error)
 	CreateDesignation(ctx context.Context, input model.CreateDesignation) (*model.Designation, error)
 	CreateLocation(ctx context.Context, input model.CreateLocation) (*model.Location, error)
@@ -195,6 +216,49 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 	ec := newExecutionContext(nil, e, nil)
 	_ = ec
 	switch typeName + "." + field {
+
+	case "AuthUser.email":
+		if e.ComplexityRoot.AuthUser.Email == nil {
+			break
+		}
+
+		return e.ComplexityRoot.AuthUser.Email(childComplexity), true
+	case "AuthUser.firstName":
+		if e.ComplexityRoot.AuthUser.FirstName == nil {
+			break
+		}
+
+		return e.ComplexityRoot.AuthUser.FirstName(childComplexity), true
+	case "AuthUser.lastName":
+		if e.ComplexityRoot.AuthUser.LastName == nil {
+			break
+		}
+
+		return e.ComplexityRoot.AuthUser.LastName(childComplexity), true
+	case "AuthUser.name":
+		if e.ComplexityRoot.AuthUser.Name == nil {
+			break
+		}
+
+		return e.ComplexityRoot.AuthUser.Name(childComplexity), true
+	case "AuthUser.phone":
+		if e.ComplexityRoot.AuthUser.Phone == nil {
+			break
+		}
+
+		return e.ComplexityRoot.AuthUser.Phone(childComplexity), true
+	case "AuthUser.tenantId":
+		if e.ComplexityRoot.AuthUser.TenantID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.AuthUser.TenantID(childComplexity), true
+	case "AuthUser.userId":
+		if e.ComplexityRoot.AuthUser.UserID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.AuthUser.UserID(childComplexity), true
 
 	case "City.code":
 		if e.ComplexityRoot.City.Code == nil {
@@ -459,6 +523,31 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.Location.Timezone(childComplexity), true
 
+	case "Login.accessExp":
+		if e.ComplexityRoot.Login.AccessExp == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Login.AccessExp(childComplexity), true
+	case "Login.accessToken":
+		if e.ComplexityRoot.Login.AccessToken == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Login.AccessToken(childComplexity), true
+	case "Login.refreshExp":
+		if e.ComplexityRoot.Login.RefreshExp == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Login.RefreshExp(childComplexity), true
+	case "Login.refreshToken":
+		if e.ComplexityRoot.Login.RefreshToken == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Login.RefreshToken(childComplexity), true
+
 	case "Mutation.createCity":
 		if e.ComplexityRoot.Mutation.CreateCity == nil {
 			break
@@ -536,6 +625,23 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.CreateTenant(childComplexity, args["input"].(model.CreateTenantInput)), true
+	case "Mutation.login":
+		if e.ComplexityRoot.Mutation.Login == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_login_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.Login(childComplexity, args["input"].(model.LoginInput)), true
+	case "Mutation.me":
+		if e.ComplexityRoot.Mutation.Me == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Mutation.Me(childComplexity), true
 
 	case "Query.designations":
 		if e.ComplexityRoot.Query.Designations == nil {
@@ -852,6 +958,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputCreateLocation,
 		ec.unmarshalInputCreateStateInput,
 		ec.unmarshalInputCreateTenantInput,
+		ec.unmarshalInputLoginInput,
 	)
 	first := true
 
@@ -927,6 +1034,34 @@ func newExecutionContext(
 }
 
 var sources = []*ast.Source{
+	{Name: "../schema/auth.graphql", Input: `scalar DateTime
+
+type AuthUser {
+  userId: Uint64!
+  tenantId: Uint64!
+  email: String!
+  name: String!
+  firstName: String!
+  lastName: String!
+  phone: String
+}
+
+type Login {
+  accessToken: String!
+  refreshToken: String!
+  accessExp: DateTime!
+  refreshExp: DateTime!
+}
+
+input LoginInput {
+  email: String!
+  password: String!
+}
+
+extend type Mutation {
+  me: AuthUser!
+  login(input: LoginInput!): Login!
+}`, BuiltIn: false},
 	{Name: "../schema/department.graphql", Input: `type Department {
   id: Uint64!
   tenantId: Uint64!
@@ -989,7 +1124,6 @@ directive @auth on FIELD_DEFINITION
 `, BuiltIn: false},
 	{Name: "../schema/geography.graphql", Input: `# --- Common Scalars ---
 scalar Uint64
-scalar DateTime
 
 # --- Types ---
 type Country {
@@ -1178,6 +1312,26 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // Each function is generated once per unique object type, deduplicating the
 // switch statements that were previously inlined in every fieldContext_* function.
 
+func (ec *executionContext) childFields_AuthUser(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "userId":
+		return ec.fieldContext_AuthUser_userId(ctx, field)
+	case "tenantId":
+		return ec.fieldContext_AuthUser_tenantId(ctx, field)
+	case "email":
+		return ec.fieldContext_AuthUser_email(ctx, field)
+	case "name":
+		return ec.fieldContext_AuthUser_name(ctx, field)
+	case "firstName":
+		return ec.fieldContext_AuthUser_firstName(ctx, field)
+	case "lastName":
+		return ec.fieldContext_AuthUser_lastName(ctx, field)
+	case "phone":
+		return ec.fieldContext_AuthUser_phone(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type AuthUser", field.Name)
+}
+
 func (ec *executionContext) childFields_City(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 	switch field.Name {
 	case "id":
@@ -1292,6 +1446,20 @@ func (ec *executionContext) childFields_Location(ctx context.Context, field grap
 		return ec.fieldContext_Location_status(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type Location", field.Name)
+}
+
+func (ec *executionContext) childFields_Login(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "accessToken":
+		return ec.fieldContext_Login_accessToken(ctx, field)
+	case "refreshToken":
+		return ec.fieldContext_Login_refreshToken(ctx, field)
+	case "accessExp":
+		return ec.fieldContext_Login_accessExp(ctx, field)
+	case "refreshExp":
+		return ec.fieldContext_Login_refreshExp(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type Login", field.Name)
 }
 
 func (ec *executionContext) childFields_State(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
@@ -1497,7 +1665,7 @@ func (ec *executionContext) field_Mutation_createCity_args(ctx context.Context, 
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
 		func(ctx context.Context, v any) (model.CreateCityInput, error) {
-			return ec.unmarshalNCreateCityInput2githubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCreateCityInput(ctx, v)
+			return ec.unmarshalNCreateCityInput2githubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐCreateCityInput(ctx, v)
 		})
 	if err != nil {
 		return nil, err
@@ -1511,7 +1679,7 @@ func (ec *executionContext) field_Mutation_createCountry_args(ctx context.Contex
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
 		func(ctx context.Context, v any) (model.CreateCountryInput, error) {
-			return ec.unmarshalNCreateCountryInput2githubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCreateCountryInput(ctx, v)
+			return ec.unmarshalNCreateCountryInput2githubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐCreateCountryInput(ctx, v)
 		})
 	if err != nil {
 		return nil, err
@@ -1525,7 +1693,7 @@ func (ec *executionContext) field_Mutation_createDepartment_args(ctx context.Con
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
 		func(ctx context.Context, v any) (model.CreateDepartment, error) {
-			return ec.unmarshalNCreateDepartment2githubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCreateDepartment(ctx, v)
+			return ec.unmarshalNCreateDepartment2githubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐCreateDepartment(ctx, v)
 		})
 	if err != nil {
 		return nil, err
@@ -1539,7 +1707,7 @@ func (ec *executionContext) field_Mutation_createDesignation_args(ctx context.Co
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
 		func(ctx context.Context, v any) (model.CreateDesignation, error) {
-			return ec.unmarshalNCreateDesignation2githubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCreateDesignation(ctx, v)
+			return ec.unmarshalNCreateDesignation2githubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐCreateDesignation(ctx, v)
 		})
 	if err != nil {
 		return nil, err
@@ -1553,7 +1721,7 @@ func (ec *executionContext) field_Mutation_createLocation_args(ctx context.Conte
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
 		func(ctx context.Context, v any) (model.CreateLocation, error) {
-			return ec.unmarshalNCreateLocation2githubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCreateLocation(ctx, v)
+			return ec.unmarshalNCreateLocation2githubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐCreateLocation(ctx, v)
 		})
 	if err != nil {
 		return nil, err
@@ -1567,7 +1735,7 @@ func (ec *executionContext) field_Mutation_createState_args(ctx context.Context,
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
 		func(ctx context.Context, v any) (model.CreateStateInput, error) {
-			return ec.unmarshalNCreateStateInput2githubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCreateStateInput(ctx, v)
+			return ec.unmarshalNCreateStateInput2githubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐCreateStateInput(ctx, v)
 		})
 	if err != nil {
 		return nil, err
@@ -1581,7 +1749,21 @@ func (ec *executionContext) field_Mutation_createTenant_args(ctx context.Context
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
 		func(ctx context.Context, v any) (model.CreateTenantInput, error) {
-			return ec.unmarshalNCreateTenantInput2githubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCreateTenantInput(ctx, v)
+			return ec.unmarshalNCreateTenantInput2githubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐCreateTenantInput(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_login_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
+		func(ctx context.Context, v any) (model.LoginInput, error) {
+			return ec.unmarshalNLoginInput2githubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐLoginInput(ctx, v)
 		})
 	if err != nil {
 		return nil, err
@@ -1808,6 +1990,167 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
+func (ec *executionContext) _AuthUser_userId(ctx context.Context, field graphql.CollectedField, obj *model.AuthUser) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AuthUser_userId(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.UserID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v uint64) graphql.Marshaler {
+			return ec.marshalNUint642uint64(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_AuthUser_userId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("AuthUser", field, false, false, errors.New("field of type Uint64 does not have child fields"))
+}
+
+func (ec *executionContext) _AuthUser_tenantId(ctx context.Context, field graphql.CollectedField, obj *model.AuthUser) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AuthUser_tenantId(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.TenantID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v uint64) graphql.Marshaler {
+			return ec.marshalNUint642uint64(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_AuthUser_tenantId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("AuthUser", field, false, false, errors.New("field of type Uint64 does not have child fields"))
+}
+
+func (ec *executionContext) _AuthUser_email(ctx context.Context, field graphql.CollectedField, obj *model.AuthUser) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AuthUser_email(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Email, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_AuthUser_email(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("AuthUser", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _AuthUser_name(ctx context.Context, field graphql.CollectedField, obj *model.AuthUser) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AuthUser_name(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Name, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_AuthUser_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("AuthUser", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _AuthUser_firstName(ctx context.Context, field graphql.CollectedField, obj *model.AuthUser) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AuthUser_firstName(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.FirstName, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_AuthUser_firstName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("AuthUser", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _AuthUser_lastName(ctx context.Context, field graphql.CollectedField, obj *model.AuthUser) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AuthUser_lastName(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.LastName, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_AuthUser_lastName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("AuthUser", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _AuthUser_phone(ctx context.Context, field graphql.CollectedField, obj *model.AuthUser) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AuthUser_phone(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Phone, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_AuthUser_phone(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("AuthUser", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
 func (ec *executionContext) _City_id(ctx context.Context, field graphql.CollectedField, obj *model.City) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -1867,7 +2210,7 @@ func (ec *executionContext) _City_state(ctx context.Context, field graphql.Colle
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.State) graphql.Marshaler {
-			return ec.marshalNState2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐState(ctx, selections, v)
+			return ec.marshalNState2ᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐState(ctx, selections, v)
 		},
 		true,
 		true,
@@ -2244,7 +2587,7 @@ func (ec *executionContext) _Country_states(ctx context.Context, field graphql.C
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.State) graphql.Marshaler {
-			return ec.marshalOState2ᚕᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐStateᚄ(ctx, selections, v)
+			return ec.marshalOState2ᚕᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐStateᚄ(ctx, selections, v)
 		},
 		true,
 		false,
@@ -2815,6 +3158,98 @@ func (ec *executionContext) fieldContext_Location_status(_ context.Context, fiel
 	return graphql.NewScalarFieldContext("Location", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
+func (ec *executionContext) _Login_accessToken(ctx context.Context, field graphql.CollectedField, obj *model.Login) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Login_accessToken(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.AccessToken, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Login_accessToken(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Login", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Login_refreshToken(ctx context.Context, field graphql.CollectedField, obj *model.Login) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Login_refreshToken(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.RefreshToken, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Login_refreshToken(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Login", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Login_accessExp(ctx context.Context, field graphql.CollectedField, obj *model.Login) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Login_accessExp(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.AccessExp, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNDateTime2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Login_accessExp(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Login", field, false, false, errors.New("field of type DateTime does not have child fields"))
+}
+
+func (ec *executionContext) _Login_refreshExp(ctx context.Context, field graphql.CollectedField, obj *model.Login) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Login_refreshExp(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.RefreshExp, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNDateTime2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Login_refreshExp(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Login", field, false, false, errors.New("field of type DateTime does not have child fields"))
+}
+
 func (ec *executionContext) _Mutation_createCountry(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -2829,7 +3264,7 @@ func (ec *executionContext) _Mutation_createCountry(ctx context.Context, field g
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.Country) graphql.Marshaler {
-			return ec.marshalNCountry2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCountry(ctx, selections, v)
+			return ec.marshalNCountry2ᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐCountry(ctx, selections, v)
 		},
 		true,
 		true,
@@ -2873,7 +3308,7 @@ func (ec *executionContext) _Mutation_createState(ctx context.Context, field gra
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.State) graphql.Marshaler {
-			return ec.marshalNState2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐState(ctx, selections, v)
+			return ec.marshalNState2ᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐState(ctx, selections, v)
 		},
 		true,
 		true,
@@ -2917,7 +3352,7 @@ func (ec *executionContext) _Mutation_createCity(ctx context.Context, field grap
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.City) graphql.Marshaler {
-			return ec.marshalNCity2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCity(ctx, selections, v)
+			return ec.marshalNCity2ᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐCity(ctx, selections, v)
 		},
 		true,
 		true,
@@ -2947,6 +3382,82 @@ func (ec *executionContext) fieldContext_Mutation_createCity(ctx context.Context
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_me(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_me(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return ec.Resolvers.Mutation().Me(ctx)
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.AuthUser) graphql.Marshaler {
+			return ec.marshalNAuthUser2ᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐAuthUser(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_me(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_AuthUser(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_login(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_login(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().Login(ctx, fc.Args["input"].(model.LoginInput))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Login) graphql.Marshaler {
+			return ec.marshalNLogin2ᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐLogin(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_login(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Login(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_login_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_createDepartment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -2961,7 +3472,7 @@ func (ec *executionContext) _Mutation_createDepartment(ctx context.Context, fiel
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.Department) graphql.Marshaler {
-			return ec.marshalNDepartment2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐDepartment(ctx, selections, v)
+			return ec.marshalNDepartment2ᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐDepartment(ctx, selections, v)
 		},
 		true,
 		true,
@@ -3005,7 +3516,7 @@ func (ec *executionContext) _Mutation_createDesignation(ctx context.Context, fie
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.Designation) graphql.Marshaler {
-			return ec.marshalNDesignation2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐDesignation(ctx, selections, v)
+			return ec.marshalNDesignation2ᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐDesignation(ctx, selections, v)
 		},
 		true,
 		true,
@@ -3049,7 +3560,7 @@ func (ec *executionContext) _Mutation_createLocation(ctx context.Context, field 
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.Location) graphql.Marshaler {
-			return ec.marshalNLocation2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐLocation(ctx, selections, v)
+			return ec.marshalNLocation2ᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐLocation(ctx, selections, v)
 		},
 		true,
 		true,
@@ -3093,7 +3604,7 @@ func (ec *executionContext) _Mutation_createTenant(ctx context.Context, field gr
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.Tenant) graphql.Marshaler {
-			return ec.marshalNTenant2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐTenant(ctx, selections, v)
+			return ec.marshalNTenant2ᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐTenant(ctx, selections, v)
 		},
 		true,
 		true,
@@ -3137,7 +3648,7 @@ func (ec *executionContext) _Query_getCountryById(ctx context.Context, field gra
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.Country) graphql.Marshaler {
-			return ec.marshalOCountry2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCountry(ctx, selections, v)
+			return ec.marshalOCountry2ᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐCountry(ctx, selections, v)
 		},
 		true,
 		false,
@@ -3180,7 +3691,7 @@ func (ec *executionContext) _Query_getCountries(ctx context.Context, field graph
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.Country) graphql.Marshaler {
-			return ec.marshalNCountry2ᚕᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCountryᚄ(ctx, selections, v)
+			return ec.marshalNCountry2ᚕᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐCountryᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -3213,7 +3724,7 @@ func (ec *executionContext) _Query_getStateById(ctx context.Context, field graph
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.State) graphql.Marshaler {
-			return ec.marshalOState2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐState(ctx, selections, v)
+			return ec.marshalOState2ᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐState(ctx, selections, v)
 		},
 		true,
 		false,
@@ -3257,7 +3768,7 @@ func (ec *executionContext) _Query_getStatesByCountryId(ctx context.Context, fie
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.State) graphql.Marshaler {
-			return ec.marshalNState2ᚕᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐStateᚄ(ctx, selections, v)
+			return ec.marshalNState2ᚕᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐStateᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -3301,7 +3812,7 @@ func (ec *executionContext) _Query_getStateByCityId(ctx context.Context, field g
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.State) graphql.Marshaler {
-			return ec.marshalOState2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐState(ctx, selections, v)
+			return ec.marshalOState2ᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐState(ctx, selections, v)
 		},
 		true,
 		false,
@@ -3345,7 +3856,7 @@ func (ec *executionContext) _Query_getCityById(ctx context.Context, field graphq
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.City) graphql.Marshaler {
-			return ec.marshalOCity2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCity(ctx, selections, v)
+			return ec.marshalOCity2ᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐCity(ctx, selections, v)
 		},
 		true,
 		false,
@@ -3389,7 +3900,7 @@ func (ec *executionContext) _Query_getCitiesByStateId(ctx context.Context, field
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.City) graphql.Marshaler {
-			return ec.marshalNCity2ᚕᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCityᚄ(ctx, selections, v)
+			return ec.marshalNCity2ᚕᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐCityᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -3433,7 +3944,7 @@ func (ec *executionContext) _Query_getCitiesByCountryId(ctx context.Context, fie
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.City) graphql.Marshaler {
-			return ec.marshalNCity2ᚕᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCityᚄ(ctx, selections, v)
+			return ec.marshalNCity2ᚕᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐCityᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -3476,7 +3987,7 @@ func (ec *executionContext) _Query_getDepartments(ctx context.Context, field gra
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.Department) graphql.Marshaler {
-			return ec.marshalNDepartment2ᚕᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐDepartmentᚄ(ctx, selections, v)
+			return ec.marshalNDepartment2ᚕᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐDepartmentᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -3509,7 +4020,7 @@ func (ec *executionContext) _Query_designations(ctx context.Context, field graph
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.Designation) graphql.Marshaler {
-			return ec.marshalNDesignation2ᚕᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐDesignationᚄ(ctx, selections, v)
+			return ec.marshalNDesignation2ᚕᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐDesignationᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -3553,7 +4064,7 @@ func (ec *executionContext) _Query_locations(ctx context.Context, field graphql.
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.Location) graphql.Marshaler {
-			return ec.marshalNLocation2ᚕᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐLocationᚄ(ctx, selections, v)
+			return ec.marshalNLocation2ᚕᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐLocationᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -3597,7 +4108,7 @@ func (ec *executionContext) _Query_getTenantById(ctx context.Context, field grap
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.Tenant) graphql.Marshaler {
-			return ec.marshalNTenant2ᚕᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐTenantᚄ(ctx, selections, v)
+			return ec.marshalNTenant2ᚕᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐTenantᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -3640,7 +4151,7 @@ func (ec *executionContext) _Query_getTenents(ctx context.Context, field graphql
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.Tenant) graphql.Marshaler {
-			return ec.marshalNTenant2ᚕᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐTenantᚄ(ctx, selections, v)
+			return ec.marshalNTenant2ᚕᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐTenantᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -3794,7 +4305,7 @@ func (ec *executionContext) _State_country(ctx context.Context, field graphql.Co
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.Country) graphql.Marshaler {
-			return ec.marshalNCountry2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCountry(ctx, selections, v)
+			return ec.marshalNCountry2ᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐCountry(ctx, selections, v)
 		},
 		true,
 		true,
@@ -3895,7 +4406,7 @@ func (ec *executionContext) _State_cities(ctx context.Context, field graphql.Col
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.City) graphql.Marshaler {
-			return ec.marshalOCity2ᚕᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCityᚄ(ctx, selections, v)
+			return ec.marshalOCity2ᚕᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐCityᚄ(ctx, selections, v)
 		},
 		true,
 		false,
@@ -5986,6 +6497,43 @@ func (ec *executionContext) unmarshalInputCreateTenantInput(ctx context.Context,
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputLoginInput(ctx context.Context, obj any) (model.LoginInput, error) {
+	var it model.LoginInput
+	if obj == nil {
+		return it, nil
+	}
+
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"email", "password"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "email":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Email = data
+		case "password":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Password = data
+		}
+	}
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -5993,6 +6541,72 @@ func (ec *executionContext) unmarshalInputCreateTenantInput(ctx context.Context,
 // endregion ************************** interface.gotpl ***************************
 
 // region    **************************** object.gotpl ****************************
+
+var authUserImplementors = []string{"AuthUser"}
+
+func (ec *executionContext) _AuthUser(ctx context.Context, sel ast.SelectionSet, obj *model.AuthUser) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, authUserImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AuthUser")
+		case "userId":
+			out.Values[i] = ec._AuthUser_userId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "tenantId":
+			out.Values[i] = ec._AuthUser_tenantId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "email":
+			out.Values[i] = ec._AuthUser_email(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "name":
+			out.Values[i] = ec._AuthUser_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "firstName":
+			out.Values[i] = ec._AuthUser_firstName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "lastName":
+			out.Values[i] = ec._AuthUser_lastName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "phone":
+			out.Values[i] = ec._AuthUser_phone(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
 
 var cityImplementors = []string{"City"}
 
@@ -6328,6 +6942,60 @@ func (ec *executionContext) _Location(ctx context.Context, sel ast.SelectionSet,
 	return out
 }
 
+var loginImplementors = []string{"Login"}
+
+func (ec *executionContext) _Login(ctx context.Context, sel ast.SelectionSet, obj *model.Login) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, loginImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Login")
+		case "accessToken":
+			out.Values[i] = ec._Login_accessToken(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "refreshToken":
+			out.Values[i] = ec._Login_refreshToken(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "accessExp":
+			out.Values[i] = ec._Login_accessExp(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "refreshExp":
+			out.Values[i] = ec._Login_refreshExp(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var mutationImplementors = []string{"Mutation"}
 
 func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
@@ -6364,6 +7032,20 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "createCity":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createCity(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "me":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_me(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "login":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_login(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -7247,6 +7929,20 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
+func (ec *executionContext) marshalNAuthUser2githubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐAuthUser(ctx context.Context, sel ast.SelectionSet, v model.AuthUser) graphql.Marshaler {
+	return ec._AuthUser(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNAuthUser2ᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐAuthUser(ctx context.Context, sel ast.SelectionSet, v *model.AuthUser) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._AuthUser(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v any) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -7263,15 +7959,15 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) marshalNCity2githubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCity(ctx context.Context, sel ast.SelectionSet, v model.City) graphql.Marshaler {
+func (ec *executionContext) marshalNCity2githubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐCity(ctx context.Context, sel ast.SelectionSet, v model.City) graphql.Marshaler {
 	return ec._City(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNCity2ᚕᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCityᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.City) graphql.Marshaler {
+func (ec *executionContext) marshalNCity2ᚕᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐCityᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.City) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
 		fc.Result = &v[i]
-		return ec.marshalNCity2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCity(ctx, sel, v[i])
+		return ec.marshalNCity2ᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐCity(ctx, sel, v[i])
 	})
 
 	for _, e := range ret {
@@ -7283,7 +7979,7 @@ func (ec *executionContext) marshalNCity2ᚕᚖgithubᚗcomᚋpawan_13gᚋhrms�
 	return ret
 }
 
-func (ec *executionContext) marshalNCity2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCity(ctx context.Context, sel ast.SelectionSet, v *model.City) graphql.Marshaler {
+func (ec *executionContext) marshalNCity2ᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐCity(ctx context.Context, sel ast.SelectionSet, v *model.City) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -7293,15 +7989,15 @@ func (ec *executionContext) marshalNCity2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgr
 	return ec._City(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNCountry2githubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCountry(ctx context.Context, sel ast.SelectionSet, v model.Country) graphql.Marshaler {
+func (ec *executionContext) marshalNCountry2githubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐCountry(ctx context.Context, sel ast.SelectionSet, v model.Country) graphql.Marshaler {
 	return ec._Country(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNCountry2ᚕᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCountryᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Country) graphql.Marshaler {
+func (ec *executionContext) marshalNCountry2ᚕᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐCountryᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Country) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
 		fc.Result = &v[i]
-		return ec.marshalNCountry2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCountry(ctx, sel, v[i])
+		return ec.marshalNCountry2ᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐCountry(ctx, sel, v[i])
 	})
 
 	for _, e := range ret {
@@ -7313,7 +8009,7 @@ func (ec *executionContext) marshalNCountry2ᚕᚖgithubᚗcomᚋpawan_13gᚋhrm
 	return ret
 }
 
-func (ec *executionContext) marshalNCountry2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCountry(ctx context.Context, sel ast.SelectionSet, v *model.Country) graphql.Marshaler {
+func (ec *executionContext) marshalNCountry2ᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐCountry(ctx context.Context, sel ast.SelectionSet, v *model.Country) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -7323,37 +8019,37 @@ func (ec *executionContext) marshalNCountry2ᚖgithubᚗcomᚋpawan_13gᚋhrms�
 	return ec._Country(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNCreateCityInput2githubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCreateCityInput(ctx context.Context, v any) (model.CreateCityInput, error) {
+func (ec *executionContext) unmarshalNCreateCityInput2githubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐCreateCityInput(ctx context.Context, v any) (model.CreateCityInput, error) {
 	res, err := ec.unmarshalInputCreateCityInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNCreateCountryInput2githubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCreateCountryInput(ctx context.Context, v any) (model.CreateCountryInput, error) {
+func (ec *executionContext) unmarshalNCreateCountryInput2githubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐCreateCountryInput(ctx context.Context, v any) (model.CreateCountryInput, error) {
 	res, err := ec.unmarshalInputCreateCountryInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNCreateDepartment2githubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCreateDepartment(ctx context.Context, v any) (model.CreateDepartment, error) {
+func (ec *executionContext) unmarshalNCreateDepartment2githubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐCreateDepartment(ctx context.Context, v any) (model.CreateDepartment, error) {
 	res, err := ec.unmarshalInputCreateDepartment(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNCreateDesignation2githubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCreateDesignation(ctx context.Context, v any) (model.CreateDesignation, error) {
+func (ec *executionContext) unmarshalNCreateDesignation2githubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐCreateDesignation(ctx context.Context, v any) (model.CreateDesignation, error) {
 	res, err := ec.unmarshalInputCreateDesignation(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNCreateLocation2githubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCreateLocation(ctx context.Context, v any) (model.CreateLocation, error) {
+func (ec *executionContext) unmarshalNCreateLocation2githubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐCreateLocation(ctx context.Context, v any) (model.CreateLocation, error) {
 	res, err := ec.unmarshalInputCreateLocation(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNCreateStateInput2githubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCreateStateInput(ctx context.Context, v any) (model.CreateStateInput, error) {
+func (ec *executionContext) unmarshalNCreateStateInput2githubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐCreateStateInput(ctx context.Context, v any) (model.CreateStateInput, error) {
 	res, err := ec.unmarshalInputCreateStateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNCreateTenantInput2githubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCreateTenantInput(ctx context.Context, v any) (model.CreateTenantInput, error) {
+func (ec *executionContext) unmarshalNCreateTenantInput2githubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐCreateTenantInput(ctx context.Context, v any) (model.CreateTenantInput, error) {
 	res, err := ec.unmarshalInputCreateTenantInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
@@ -7374,15 +8070,15 @@ func (ec *executionContext) marshalNDateTime2string(ctx context.Context, sel ast
 	return res
 }
 
-func (ec *executionContext) marshalNDepartment2githubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐDepartment(ctx context.Context, sel ast.SelectionSet, v model.Department) graphql.Marshaler {
+func (ec *executionContext) marshalNDepartment2githubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐDepartment(ctx context.Context, sel ast.SelectionSet, v model.Department) graphql.Marshaler {
 	return ec._Department(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNDepartment2ᚕᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐDepartmentᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Department) graphql.Marshaler {
+func (ec *executionContext) marshalNDepartment2ᚕᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐDepartmentᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Department) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
 		fc.Result = &v[i]
-		return ec.marshalNDepartment2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐDepartment(ctx, sel, v[i])
+		return ec.marshalNDepartment2ᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐDepartment(ctx, sel, v[i])
 	})
 
 	for _, e := range ret {
@@ -7394,7 +8090,7 @@ func (ec *executionContext) marshalNDepartment2ᚕᚖgithubᚗcomᚋpawan_13gᚋ
 	return ret
 }
 
-func (ec *executionContext) marshalNDepartment2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐDepartment(ctx context.Context, sel ast.SelectionSet, v *model.Department) graphql.Marshaler {
+func (ec *executionContext) marshalNDepartment2ᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐDepartment(ctx context.Context, sel ast.SelectionSet, v *model.Department) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -7404,15 +8100,15 @@ func (ec *executionContext) marshalNDepartment2ᚖgithubᚗcomᚋpawan_13gᚋhrm
 	return ec._Department(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNDesignation2githubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐDesignation(ctx context.Context, sel ast.SelectionSet, v model.Designation) graphql.Marshaler {
+func (ec *executionContext) marshalNDesignation2githubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐDesignation(ctx context.Context, sel ast.SelectionSet, v model.Designation) graphql.Marshaler {
 	return ec._Designation(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNDesignation2ᚕᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐDesignationᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Designation) graphql.Marshaler {
+func (ec *executionContext) marshalNDesignation2ᚕᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐDesignationᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Designation) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
 		fc.Result = &v[i]
-		return ec.marshalNDesignation2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐDesignation(ctx, sel, v[i])
+		return ec.marshalNDesignation2ᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐDesignation(ctx, sel, v[i])
 	})
 
 	for _, e := range ret {
@@ -7424,7 +8120,7 @@ func (ec *executionContext) marshalNDesignation2ᚕᚖgithubᚗcomᚋpawan_13g�
 	return ret
 }
 
-func (ec *executionContext) marshalNDesignation2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐDesignation(ctx context.Context, sel ast.SelectionSet, v *model.Designation) graphql.Marshaler {
+func (ec *executionContext) marshalNDesignation2ᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐDesignation(ctx context.Context, sel ast.SelectionSet, v *model.Designation) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -7466,15 +8162,15 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 	return res
 }
 
-func (ec *executionContext) marshalNLocation2githubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐLocation(ctx context.Context, sel ast.SelectionSet, v model.Location) graphql.Marshaler {
+func (ec *executionContext) marshalNLocation2githubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐLocation(ctx context.Context, sel ast.SelectionSet, v model.Location) graphql.Marshaler {
 	return ec._Location(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNLocation2ᚕᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐLocationᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Location) graphql.Marshaler {
+func (ec *executionContext) marshalNLocation2ᚕᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐLocationᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Location) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
 		fc.Result = &v[i]
-		return ec.marshalNLocation2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐLocation(ctx, sel, v[i])
+		return ec.marshalNLocation2ᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐLocation(ctx, sel, v[i])
 	})
 
 	for _, e := range ret {
@@ -7486,7 +8182,7 @@ func (ec *executionContext) marshalNLocation2ᚕᚖgithubᚗcomᚋpawan_13gᚋhr
 	return ret
 }
 
-func (ec *executionContext) marshalNLocation2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐLocation(ctx context.Context, sel ast.SelectionSet, v *model.Location) graphql.Marshaler {
+func (ec *executionContext) marshalNLocation2ᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐLocation(ctx context.Context, sel ast.SelectionSet, v *model.Location) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -7496,15 +8192,34 @@ func (ec *executionContext) marshalNLocation2ᚖgithubᚗcomᚋpawan_13gᚋhrms�
 	return ec._Location(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNState2githubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐState(ctx context.Context, sel ast.SelectionSet, v model.State) graphql.Marshaler {
+func (ec *executionContext) marshalNLogin2githubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐLogin(ctx context.Context, sel ast.SelectionSet, v model.Login) graphql.Marshaler {
+	return ec._Login(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNLogin2ᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐLogin(ctx context.Context, sel ast.SelectionSet, v *model.Login) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Login(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNLoginInput2githubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐLoginInput(ctx context.Context, v any) (model.LoginInput, error) {
+	res, err := ec.unmarshalInputLoginInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNState2githubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐState(ctx context.Context, sel ast.SelectionSet, v model.State) graphql.Marshaler {
 	return ec._State(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNState2ᚕᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐStateᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.State) graphql.Marshaler {
+func (ec *executionContext) marshalNState2ᚕᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐStateᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.State) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
 		fc.Result = &v[i]
-		return ec.marshalNState2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐState(ctx, sel, v[i])
+		return ec.marshalNState2ᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐState(ctx, sel, v[i])
 	})
 
 	for _, e := range ret {
@@ -7516,7 +8231,7 @@ func (ec *executionContext) marshalNState2ᚕᚖgithubᚗcomᚋpawan_13gᚋhrms�
 	return ret
 }
 
-func (ec *executionContext) marshalNState2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐState(ctx context.Context, sel ast.SelectionSet, v *model.State) graphql.Marshaler {
+func (ec *executionContext) marshalNState2ᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐState(ctx context.Context, sel ast.SelectionSet, v *model.State) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -7542,15 +8257,15 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 	return res
 }
 
-func (ec *executionContext) marshalNTenant2githubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐTenant(ctx context.Context, sel ast.SelectionSet, v model.Tenant) graphql.Marshaler {
+func (ec *executionContext) marshalNTenant2githubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐTenant(ctx context.Context, sel ast.SelectionSet, v model.Tenant) graphql.Marshaler {
 	return ec._Tenant(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNTenant2ᚕᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐTenantᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Tenant) graphql.Marshaler {
+func (ec *executionContext) marshalNTenant2ᚕᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐTenantᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Tenant) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
 		fc.Result = &v[i]
-		return ec.marshalNTenant2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐTenant(ctx, sel, v[i])
+		return ec.marshalNTenant2ᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐTenant(ctx, sel, v[i])
 	})
 
 	for _, e := range ret {
@@ -7562,7 +8277,7 @@ func (ec *executionContext) marshalNTenant2ᚕᚖgithubᚗcomᚋpawan_13gᚋhrms
 	return ret
 }
 
-func (ec *executionContext) marshalNTenant2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐTenant(ctx context.Context, sel ast.SelectionSet, v *model.Tenant) graphql.Marshaler {
+func (ec *executionContext) marshalNTenant2ᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐTenant(ctx context.Context, sel ast.SelectionSet, v *model.Tenant) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -7759,14 +8474,14 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
-func (ec *executionContext) marshalOCity2ᚕᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCityᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.City) graphql.Marshaler {
+func (ec *executionContext) marshalOCity2ᚕᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐCityᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.City) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
 		fc.Result = &v[i]
-		return ec.marshalNCity2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCity(ctx, sel, v[i])
+		return ec.marshalNCity2ᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐCity(ctx, sel, v[i])
 	})
 
 	for _, e := range ret {
@@ -7778,14 +8493,14 @@ func (ec *executionContext) marshalOCity2ᚕᚖgithubᚗcomᚋpawan_13gᚋhrms�
 	return ret
 }
 
-func (ec *executionContext) marshalOCity2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCity(ctx context.Context, sel ast.SelectionSet, v *model.City) graphql.Marshaler {
+func (ec *executionContext) marshalOCity2ᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐCity(ctx context.Context, sel ast.SelectionSet, v *model.City) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._City(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOCountry2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐCountry(ctx context.Context, sel ast.SelectionSet, v *model.Country) graphql.Marshaler {
+func (ec *executionContext) marshalOCountry2ᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐCountry(ctx context.Context, sel ast.SelectionSet, v *model.Country) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -7845,14 +8560,14 @@ func (ec *executionContext) marshalOJSON2ᚖstring(ctx context.Context, sel ast.
 	return res
 }
 
-func (ec *executionContext) marshalOState2ᚕᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐStateᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.State) graphql.Marshaler {
+func (ec *executionContext) marshalOState2ᚕᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐStateᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.State) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
 		fc.Result = &v[i]
-		return ec.marshalNState2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐState(ctx, sel, v[i])
+		return ec.marshalNState2ᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐState(ctx, sel, v[i])
 	})
 
 	for _, e := range ret {
@@ -7864,7 +8579,7 @@ func (ec *executionContext) marshalOState2ᚕᚖgithubᚗcomᚋpawan_13gᚋhrms�
 	return ret
 }
 
-func (ec *executionContext) marshalOState2ᚖgithubᚗcomᚋpawan_13gᚋhrmsᚋgraphᚋmodelᚐState(ctx context.Context, sel ast.SelectionSet, v *model.State) graphql.Marshaler {
+func (ec *executionContext) marshalOState2ᚖgithubᚗcomᚋpawan13gᚋhrmsᚋgraphᚋmodelᚐState(ctx context.Context, sel ast.SelectionSet, v *model.State) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

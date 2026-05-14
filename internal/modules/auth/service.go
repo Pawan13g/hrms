@@ -6,39 +6,31 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/pawan_13g/hrms/internal/modules/auth/util/jwt"
+	"github.com/pawan13g/hrms/graph/model"
+	"github.com/pawan13g/hrms/internal/modules/auth/util/jwt"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type Service interface {
-	Login(
-		issuer *jwt.Issuer,
-		input LoginInput,
-	) (*LoginResponse, error)
-
-	RefreshToken(
-		issuer *jwt.Issuer,
-		refreshToken string,
-	) (*LoginResponse, error)
+	Login(input model.LoginInput) (*model.Login, error)
+	RefreshSession(refreshToken string) (*model.Login, error)
+	RevokeSession(refreshToken string) error
+	GetSession(token string) (*model.AuthUser, error)
 }
 
 type service struct {
-	repo Repository
+	repo   Repository
+	issuer *jwt.Issuer
 }
 
-func New(
-	repo Repository,
-) Service {
-
+func New(repo Repository, issuer *jwt.Issuer) Service {
 	return &service{
-		repo: repo,
+		repo:   repo,
+		issuer: issuer,
 	}
 }
 
-func (s *service) Login(
-	issuer *jwt.Issuer,
-	input LoginInput,
-) (*LoginResponse, error) {
+func (s *service) Login(input model.LoginInput) (*model.Login, error) {
 
 	user, err := s.repo.GetUserByEmail(
 		input.Email,
@@ -59,7 +51,7 @@ func (s *service) Login(
 
 	jti := uuid.NewString()
 
-	pair, err := issuer.Issue(
+	pair, err := s.issuer.Issue(
 		user.ID,
 		jti,
 	)
@@ -72,20 +64,32 @@ func (s *service) Login(
 		return nil, err
 	}
 
-	return &LoginResponse{
+	return &model.Login{
 		AccessToken:  pair.Access,
 		RefreshToken: pair.Refresh,
-		AccessExp:    pair.AccessExp,
-		RefreshExp:   pair.RefreshExp,
+		AccessExp:    strconv.FormatInt(pair.AccessExp.Unix(), 10),
+		RefreshExp:   strconv.FormatInt(pair.RefreshExp.Unix(), 10),
 	}, nil
 }
 
-func (s *service) RefreshToken(
-	issuer *jwt.Issuer,
-	refreshToken string,
-) (*LoginResponse, error) {
+func (s *service) RevokeSession(refreshToken string) error {
 
-	claims, err := issuer.Parse(refreshToken)
+	claims, err := s.issuer.Parse(refreshToken)
+	if err != nil {
+		return errors.New("invalid refresh")
+	}
+
+	userID, err := strconv.ParseUint(claims.Subject, 10, 64)
+	if err != nil {
+		return errors.New("invalid refresh")
+	}
+
+	return s.repo.RevokeUserSession(userID, claims.JTI)
+}
+
+func (s *service) RefreshSession(refreshToken string) (*model.Login, error) {
+
+	claims, err := s.issuer.Parse(refreshToken)
 	if err != nil {
 		return nil, errors.New("invalid refresh")
 	}
@@ -103,7 +107,7 @@ func (s *service) RefreshToken(
 	s.repo.RevokeUserSession(userID, claims.JTI)
 
 	jti := uuid.NewString()
-	pair, err := issuer.Issue(userID, jti)
+	pair, err := s.issuer.Issue(userID, jti)
 	if err != nil {
 		return nil, errors.New("token issue failed")
 	}
@@ -111,10 +115,34 @@ func (s *service) RefreshToken(
 		return nil, errors.New("refresh save failed")
 	}
 
-	return &LoginResponse{
+	return &model.Login{
 		AccessToken:  pair.Access,
 		RefreshToken: pair.Refresh,
-		AccessExp:    pair.AccessExp,
-		RefreshExp:   pair.RefreshExp,
+		AccessExp:    strconv.FormatInt(pair.AccessExp.Unix(), 10),
+		RefreshExp:   strconv.FormatInt(pair.RefreshExp.Unix(), 10),
+	}, nil
+}
+
+func (s *service) GetSession(token string) (*model.AuthUser, error) {
+	claims, err := s.issuer.Parse(token)
+	if err != nil {
+		return nil, errors.New("invalid token")
+	}
+
+	userID, err := strconv.ParseUint(claims.Subject, 10, 64)
+
+	user, err := s.repo.GetUserByID(userID)
+
+	if err != nil {
+		return nil, errors.New("invalid token")
+	}
+	return &model.AuthUser{
+		UserID:    user.ID,
+		TenantID:  user.TenantID,
+		Email:     user.Email,
+		Name:      user.FirstName + " " + user.LastName,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		Phone:     &user.Phone,
 	}, nil
 }
